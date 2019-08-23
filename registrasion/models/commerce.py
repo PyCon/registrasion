@@ -38,7 +38,7 @@ class Cart(models.Model):
         (STATUS_RELEASED, _("Released")),
     ]
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     # ProductItems (foreign key)
     vouchers = models.ManyToManyField(inventory.Voucher, blank=True)
     time_last_updated = models.DateTimeField(
@@ -76,8 +76,8 @@ class ProductItem(models.Model):
         return "product: %s * %d in Cart: %s" % (
             self.product, self.quantity, self.cart)
 
-    cart = models.ForeignKey(Cart)
-    product = models.ForeignKey(inventory.Product)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    product = models.ForeignKey(inventory.Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(db_index=True)
 
 
@@ -93,9 +93,9 @@ class DiscountItem(models.Model):
         return "%s: %s * %d in Cart: %s" % (
             self.discount, self.product, self.quantity, self.cart)
 
-    cart = models.ForeignKey(Cart)
-    product = models.ForeignKey(inventory.Product)
-    discount = models.ForeignKey(conditions.DiscountBase)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    product = models.ForeignKey(inventory.Product, on_delete=models.CASCADE)
+    discount = models.ForeignKey(conditions.DiscountBase, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
 
 
@@ -189,8 +189,8 @@ class Invoice(models.Model):
         return self.value - self.total_payments()
 
     # Invoice Number
-    user = models.ForeignKey(User)
-    cart = models.ForeignKey(Cart, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    cart = models.ForeignKey(Cart, null=True, on_delete=models.CASCADE)
     cart_revision = models.IntegerField(
         null=True,
         db_index=True,
@@ -242,11 +242,11 @@ class LineItem(models.Model):
         ''' price * quantity '''
         return self.price * self.quantity
 
-    invoice = models.ForeignKey(Invoice)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
     description = models.CharField(max_length=255)
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=8, decimal_places=2)
-    product = models.ForeignKey(inventory.Product, null=True, blank=True)
+    product = models.ForeignKey(inventory.Product, null=True, blank=True, on_delete=models.CASCADE)
 
 
 @python_2_unicode_compatible
@@ -275,7 +275,7 @@ class PaymentBase(models.Model):
     def __str__(self):
         return "Payment: ref=%s amount=%s" % (self.reference, self.amount)
 
-    invoice = models.ForeignKey(Invoice)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
     time = models.DateTimeField(default=timezone.now)
     reference = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=8, decimal_places=2)
@@ -287,7 +287,7 @@ class ManualPayment(PaymentBase):
     class Meta:
         app_label = "registrasion"
 
-    entered_by = models.ForeignKey(User)
+    entered_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 class CreditNote(PaymentBase):
@@ -364,7 +364,7 @@ class CreditNoteApplication(CleanOnSave, PaymentBase):
                 "Cannot apply a refunded credit note to an invoice"
             )
 
-    parent = models.OneToOneField(CreditNote)
+    parent = models.OneToOneField(CreditNote, on_delete=models.CASCADE)
 
 
 class CreditNoteRefund(CleanOnSave, models.Model):
@@ -391,7 +391,7 @@ class CreditNoteRefund(CleanOnSave, models.Model):
                 "Cannot refund a credit note that has been paid to an invoice"
             )
 
-    parent = models.OneToOneField(CreditNote)
+    parent = models.OneToOneField(CreditNote, on_delete=models.CASCADE)
     time = models.DateTimeField(default=timezone.now)
     reference = models.CharField(max_length=255)
 
@@ -402,4 +402,4 @@ class ManualCreditNoteRefund(CreditNoteRefund):
     class Meta:
         app_label = "registrasion"
 
-    entered_by = models.ForeignKey(User)
+    entered_by = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -156,7 +156,8 @@ class Product(models.Model):
     )
     category = models.ForeignKey(
         Category,
-        verbose_name=_("Product category")
+        verbose_name=_("Product category"),
+        on_delete=models.CASCADE,
     )
     price = models.DecimalField(
         max_digits=8,

@@ -1,2 +1,2 @@
-django-nested-admin==2.2.6
+django-nested-admin==3.2.3
 #symposion==1.0b2.dev3

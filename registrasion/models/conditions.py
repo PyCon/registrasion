@@ -503,6 +503,7 @@ class CategoryFlag(FlagBase):
         inventory.Category,
         help_text=_("If a product from this category is purchased, this "
                     "condition is met."),
+        on_delete=models.CASCADE,
     )
 
 
