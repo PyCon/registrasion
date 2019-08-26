@@ -5,7 +5,7 @@ from registrasion.controllers.item import ItemController
 from django import template
 from django.conf import settings
 from django.db.models import Sum
-from urllib import urlencode  # TODO: s/urllib/six.moves.urllib/
+from urllib.parse import urlencode
 
 register = template.Library()
 
@@ -19,7 +19,7 @@ def user_for_context(context):
         return context.request.user
 
 
-@register.assignment_tag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def available_categories(context):
     ''' Gets all of the currently available products.
 
@@ -31,7 +31,7 @@ def available_categories(context):
     return CategoryController.available_categories(user_for_context(context))
 
 
-@register.assignment_tag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def missing_categories(context):
     ''' Adds the categories that the user does not currently have. '''
     user = user_for_context(context)
@@ -46,7 +46,7 @@ def missing_categories(context):
     return categories_available - categories_held
 
 
-@register.assignment_tag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def available_credit(context):
     ''' Calculates the sum of unclaimed credit from this user's credit notes.
 
@@ -63,7 +63,7 @@ def available_credit(context):
     return 0 - ret
 
 
-@register.assignment_tag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def invoices(context):
     '''
 
@@ -72,7 +72,7 @@ def invoices(context):
     return commerce.Invoice.objects.filter(user=user_for_context(context))
 
 
-@register.assignment_tag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def items_pending(context):
     ''' Gets all of the items that the user from this context has reserved.
 
@@ -83,7 +83,7 @@ def items_pending(context):
     return ItemController(user_for_context(context)).items_pending()
 
 
-@register.assignment_tag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def items_purchased(context, category=None):
     ''' Returns the items purchased for this user.
 
@@ -96,7 +96,7 @@ def items_purchased(context, category=None):
     )
 
 
-@register.assignment_tag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def total_items_purchased(context, category=None):
     ''' Returns the number of items purchased for this user (sum of quantities).
 
@@ -107,7 +107,7 @@ def total_items_purchased(context, category=None):
     return sum(i.quantity for i in items_purchased(context, category))
 
 
-@register.assignment_tag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def report_as_csv(context, section):
 
     old_query = context.request.META["QUERY_STRING"]
@@ -120,7 +120,7 @@ def report_as_csv(context, section):
     return context.request.path + "?" + querystring
 
 
-@register.assignment_tag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def sold_out_and_unregistered(context):
     ''' If the current user is unregistered, returns True if there are no
     products in the TICKET_PRODUCT_CATEGORY that are available to that user.
@@ -189,8 +189,7 @@ def include_if_exists(parser, token):
     try:
         tag_name, template_name = token.split_contents()
     except ValueError:
-        raise template.TemplateSyntaxError, \
-            "%r tag requires a single argument" % token.contents.split()[0]
+        raise template.TemplateSyntaxError("%r tag requires a single argument" % token.contents.split()[0])
 
     return IncludeNode(template_name)
 

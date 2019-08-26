@@ -1,7 +1,7 @@
 from . import conditions
 from . import inventory
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import F, Q, Sum
@@ -9,6 +9,8 @@ from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from model_utils.managers import InheritanceManager
+
+User = get_user_model()
 
 
 # Commerce Models

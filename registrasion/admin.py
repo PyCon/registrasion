@@ -44,12 +44,14 @@ class DiscountForProductInline(admin.TabularInline):
     model = conditions.DiscountForProduct
     verbose_name = _("Product included in discount")
     verbose_name_plural = _("Products included in discount")
+    sortable_options = []
 
 
 class DiscountForCategoryInline(admin.TabularInline):
     model = conditions.DiscountForCategory
     verbose_name = _("Category included in discount")
     verbose_name_plural = _("Categories included in discount")
+    sortable_options = []
 
 
 @admin.register(conditions.TimeOrStockLimitDiscount)
@@ -137,7 +139,7 @@ class VoucherFlagInline(nested_admin.NestedStackedInline):
 
 
 @admin.register(inventory.Voucher)
-class VoucherAdmin(nested_admin.NestedAdmin):
+class VoucherAdmin(nested_admin.NestedModelAdmin):
 
     def effects(self, obj):
         ''' List the effects of the voucher in the admin. '''
@@ -171,7 +173,7 @@ class VoucherAdmin(nested_admin.NestedAdmin):
 # Enabling conditions
 @admin.register(conditions.ProductFlag)
 class ProductFlagAdmin(
-        nested_admin.NestedAdmin,
+        nested_admin.NestedModelAdmin,
         EffectsDisplayMixin):
 
     def enablers(self, obj):
@@ -187,7 +189,7 @@ class ProductFlagAdmin(
 # Enabling conditions
 @admin.register(conditions.CategoryFlag)
 class CategoryFlagAdmin(
-        nested_admin.NestedAdmin,
+        nested_admin.NestedModelAdmin,
         EffectsDisplayMixin):
 
     model = conditions.CategoryFlag
@@ -199,7 +201,7 @@ class CategoryFlagAdmin(
 
 
 @admin.register(conditions.SpeakerFlag)
-class SpeakerFlagAdmin(nested_admin.NestedAdmin, EffectsDisplayMixin):
+class SpeakerFlagAdmin(nested_admin.NestedModelAdmin, EffectsDisplayMixin):
 
     model = conditions.SpeakerFlag
     fields = ("description", "is_presenter", "is_copresenter", "proposal_kind",
