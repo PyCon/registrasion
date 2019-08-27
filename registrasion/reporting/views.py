@@ -7,13 +7,13 @@ import itertools
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import F, Q
 from django.db.models import Count, Max, Sum
 from django.db.models import Case, When, Value
 from django.db.models.fields.related import RelatedField
 from django.shortcuts import render
+from django.urls import reverse
 
 from registrasion.controllers.cart import CartController
 from registrasion.controllers.item import ItemController

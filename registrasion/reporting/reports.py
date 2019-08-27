@@ -2,8 +2,8 @@ import csv
 
 from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render
-from django.core.urlresolvers import reverse
 from django.http import HttpResponse
+from django.urls import reverse
 from functools import wraps
 
 from registrasion import views

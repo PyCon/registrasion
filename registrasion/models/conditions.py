@@ -9,8 +9,6 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from model_utils.managers import InheritanceManager
 
-from symposion import proposals
-
 
 # Condition Types
 
@@ -98,7 +96,7 @@ class SpeakerCondition(models.Model):
                     "presentation."),
     )
     proposal_kind = models.ManyToManyField(
-        proposals.models.ProposalKind,
+        "symposion_proposals.ProposalKind",
         help_text=_("The types of proposals that these users may be "
                     "presenters of."),
     )
