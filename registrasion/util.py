@@ -12,7 +12,7 @@ def generate_access_code():
 
     length = 6
     # all upper-case letters + digits 1-9 (no 0 vs O confusion)
-    chars = string.uppercase + string.digits[1:]
+    chars = string.ascii_uppercase + string.digits[1:]
     # 6 chars => 35 ** 6 = 1838265625 (should be enough for anyone)
     return get_random_string(length=length, allowed_chars=chars)
 

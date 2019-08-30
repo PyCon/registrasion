@@ -20,9 +20,9 @@ from collections import namedtuple
 
 from django import forms as django_forms
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
-from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
@@ -31,6 +31,8 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.template import Context, Template, loader
+
+User = get_user_model()
 
 
 _GuidedRegistrationSection = namedtuple(
