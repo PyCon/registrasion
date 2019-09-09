@@ -381,18 +381,10 @@ def _handle_profile(request, prefix):
     except ObjectDoesNotExist:
         profile = None
 
-    # Load a pre-entered name from the speaker's profile,
-    # if they have one.
-    try:
-        speaker_profile = request.user.speaker_profile
-        speaker_name = speaker_profile.name
-    except ObjectDoesNotExist:
-        speaker_name = None
-
     name_field = ProfileForm.Meta.model.name_field()
     initial = {}
-    if profile is None and name_field is not None:
-        initial[name_field] = speaker_name
+    if name_field is not None:
+        initial[name_field] = request.user.name
 
     form = ProfileForm(
         request.POST or None,
@@ -549,7 +541,7 @@ def _handle_products(request, category, products, prefix):
             carts = commerce.Cart.objects.filter(user=request.user)
             items = commerce.ProductItem.objects.filter(
                 product__category=category,
-                cart=carts,
+                cart__in=carts,
             )
             if len(items) == 0:
                 products_form.add_error(
