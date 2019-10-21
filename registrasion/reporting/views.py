@@ -6,7 +6,7 @@ import itertools
 
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import F, Q
 from django.db.models import Count, Max, Sum
@@ -29,6 +29,8 @@ from .reports import Links
 from .reports import ListReport
 from .reports import QuerysetReport
 from .reports import report_view
+
+User = get_user_model()
 
 
 def CURRENCY():

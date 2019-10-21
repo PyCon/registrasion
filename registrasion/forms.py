@@ -5,6 +5,9 @@ from .models import inventory
 from django import forms
 from django.db.models import Q
 
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Field, Fieldset, Div, HTML, ButtonHolder, Submit
+
 
 class ApplyCreditNoteForm(forms.Form):
 
@@ -424,6 +427,17 @@ class _ItemQuantityProductsFormSet(_HasProductsFields, forms.BaseFormSet):
 
 
 class VoucherForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        super(VoucherForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Div(
+                Fieldset('', 'voucher'),
+                css_class="registration-fieldset",
+            )
+        )
 
     required_css_class = 'label-required'
 
