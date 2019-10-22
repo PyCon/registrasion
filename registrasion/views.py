@@ -31,6 +31,7 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.template import Context, Template, loader
+from waffle.decorators import waffle_flag
 
 User = get_user_model()
 
@@ -67,6 +68,7 @@ class GuidedRegistrationSection(_GuidedRegistrationSection):
 
 
 @login_required
+@waffle_flag('registration_open')
 def guided_registration(request, page_number=None):
     ''' Goes through the registration process in order, making sure user sees
     all valid categories.
@@ -315,6 +317,7 @@ def _guided_registration_profile_and_voucher(request):
 
 
 @login_required
+@waffle_flag('registration_open')
 def review(request):
     ''' View for the review page. '''
 
@@ -326,6 +329,7 @@ def review(request):
 
 
 @login_required
+@waffle_flag('registration_open')
 def edit_profile(request):
     ''' View for editing an attendee's profile
 
@@ -403,6 +407,7 @@ def _handle_profile(request, prefix):
 
 
 @login_required
+@waffle_flag('registration_open')
 def product_category(request, category_id):
     ''' Form for selecting products from an individual product category.
 
@@ -478,6 +483,7 @@ def product_category(request, category_id):
     return render(request, "registrasion/product_category.html", data)
 
 
+@waffle_flag('registration_open')
 def voucher_code(request):
     ''' A view *just* for entering a voucher form. '''
 
@@ -620,6 +626,7 @@ def _handle_voucher(request, prefix):
 
 
 @login_required
+@waffle_flag('registration_open')
 def checkout(request, user_id=None):
     ''' Runs the checkout process for the current cart.
 
@@ -681,6 +688,7 @@ def _checkout_errors(request, errors):
     return render(request, "registrasion/checkout_errors.html", data)
 
 
+@waffle_flag('registration_open')
 def invoice_access(request, access_code):
     ''' Redirects to an invoice for the attendee that matches the given access
     code, if any.
@@ -724,6 +732,7 @@ def invoice_access(request, access_code):
     return redirect("invoice", invoice.id, access_code)
 
 
+@waffle_flag('registration_open')
 def invoice(request, invoice_id, access_code=None):
     ''' Displays an invoice.
 
@@ -1086,6 +1095,7 @@ def badge(request, user_id):
     return response
 
 
+@user_passes_test(_staff_only)
 def badges(request):
     ''' Either displays a form containing a list of users with badges to
     render, or returns a .zip file containing their badges. '''
@@ -1122,6 +1132,7 @@ def badges(request):
     return render(request, "registrasion/badges.html", data)
 
 
+@user_passes_test(_staff_only)
 def render_badge(user):
     ''' Renders a single user's badge. '''
 

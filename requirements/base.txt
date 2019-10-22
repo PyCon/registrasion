@@ -1,2 +1,3 @@
 django-nested-admin==3.2.3
+django-waffle==0.17.0
 #symposion==1.0b2.dev3
