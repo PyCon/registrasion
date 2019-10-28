@@ -3,6 +3,8 @@ from registrasion.models import inventory
 
 from symposion.proposals import models as proposals_models
 
+from crispy_forms.helper import FormHelper
+
 from django import forms
 
 # Reporting forms.
@@ -17,6 +19,11 @@ def mix_form(*a):
 
 class DiscountForm(forms.Form):
 
+    def __init__(self, *args, **kwargs):
+        super(DiscountForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+
     required_css_class = 'label-required'
 
     discount = forms.ModelMultipleChoiceField(
@@ -26,6 +33,11 @@ class DiscountForm(forms.Form):
 
 
 class ProductAndCategoryForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        super(ProductAndCategoryForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
 
     required_css_class = 'label-required'
 
@@ -41,6 +53,11 @@ class ProductAndCategoryForm(forms.Form):
 
 class UserIdForm(forms.Form):
 
+    def __init__(self, *args, **kwargs):
+        super(UserIdForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+
     required_css_class = 'label-required'
 
     user = forms.IntegerField(
@@ -51,6 +68,11 @@ class UserIdForm(forms.Form):
 
 class ProposalKindForm(forms.Form):
 
+    def __init__(self, *args, **kwargs):
+        super(ProposalKindForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+
     required_css_class = 'label-required'
 
     kind = forms.ModelMultipleChoiceField(
@@ -60,6 +82,11 @@ class ProposalKindForm(forms.Form):
 
 
 class GroupByForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        super(GroupByForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
 
     required_css_class = 'label-required'
 
@@ -89,6 +116,11 @@ def model_fields_form_factory(model):
             choices.append((field.name, field.verbose_name))
 
     class ModelFieldsForm(forms.Form):
+        def __init__(self, *args, **kwargs):
+            super(ModelFieldsForm, self).__init__(*args, **kwargs)
+            self.helper = FormHelper()
+            self.helper.form_tag = False
+
         fields = forms.MultipleChoiceField(
             choices=choices,
             required=False,
