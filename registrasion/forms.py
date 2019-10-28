@@ -103,7 +103,10 @@ def ProductsForm(category, products):
 
     # Produce a subclass of _ProductsForm which we can alter the base_fields on
     class ProductsForm(RENDER_TYPES[category.render_type]):
-        pass
+        def __init__(self, *args, **kwargs):
+            super(ProductsForm, self).__init__(*args, **kwargs)
+            self.helper = FormHelper()
+            self.helper.form_tag = False
 
     products = list(products)
     products.sort(key=lambda prod: prod.order)
