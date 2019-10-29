@@ -1,6 +1,7 @@
 import datetime
 
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
@@ -44,6 +45,12 @@ class Category(models.Model):
 
             ``RENDER_TYPE_CHECKBOX`` shows a checkbox beside each product.
 
+            ``RENDER_TYPE_PWYW`` adds a freeform amount field for users to
+            pay what they want.
+
+            ``RENDER_TYPE_CHECKBOX_QUANTITY`` similar to RENDER_TYPE_QUANTITY
+            but displays products with a limit of 1 as a checkbox.
+
         limit_per_user (Optional[int]): This restricts the number of items
             from this Category that each attendee may claim. This extends
             across multiple Invoices.
@@ -66,12 +73,16 @@ class Category(models.Model):
     RENDER_TYPE_QUANTITY = 2
     RENDER_TYPE_ITEM_QUANTITY = 3
     RENDER_TYPE_CHECKBOX = 4
+    RENDER_TYPE_PWYW = 5
+    RENDER_TYPE_CHECKBOX_QUANTITY = 6
 
     CATEGORY_RENDER_TYPES = [
         (RENDER_TYPE_RADIO, _("Radio button")),
         (RENDER_TYPE_QUANTITY, _("Quantity boxes")),
         (RENDER_TYPE_ITEM_QUANTITY, _("Product selector and quantity box")),
         (RENDER_TYPE_CHECKBOX, _("Checkbox button")),
+        (RENDER_TYPE_PWYW, _("User Selected Amount")),
+        (RENDER_TYPE_CHECKBOX_QUANTITY, _("Checkbox/Quantity Hybrid")),
     ]
 
     name = models.CharField(
@@ -179,6 +190,11 @@ class Product(models.Model):
         verbose_name=("Display order"),
         db_index=True,
     )
+    display_price = models.BooleanField(
+        verbose_name=("Display price"),
+        default=True,
+    )
+    additional_data = JSONField(null=True, blank=True)
 
 
 @python_2_unicode_compatible

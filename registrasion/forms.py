@@ -99,6 +99,8 @@ def ProductsForm(category, products):
         cat.RENDER_TYPE_RADIO: _RadioButtonProductsForm,
         cat.RENDER_TYPE_ITEM_QUANTITY: _ItemQuantityProductsForm,
         cat.RENDER_TYPE_CHECKBOX: _CheckboxProductsForm,
+        cat.RENDER_TYPE_PWYW: _PayWhatYouWantProductsForm,
+        cat.RENDER_TYPE_CHECKBOX_QUANTITY: _CheckboxForLimitOneProductsForm,
     }
 
     # Produce a subclass of _ProductsForm which we can alter the base_fields on
@@ -183,12 +185,18 @@ class _QuantityBoxProductsForm(_ProductsForm):
     def set_fields(cls, category, products):
         for product in products:
             if product.description:
-                help_text = "$%d each -- %s" % (
-                    product.price,
-                    product.description,
-                )
+                if product.display_price:
+                    help_text = "$%d each -- %s" % (
+                        product.price,
+                        product.description,
+                    )
+                else:
+                    help_text = product.description
             else:
-                help_text = "$%d each" % product.price
+                if product.display_price:
+                    help_text = "$%d each" % product.price
+                else:
+                    help_text = None
 
             field = forms.IntegerField(
                 label=product.name,
@@ -223,7 +231,10 @@ class _RadioButtonProductsForm(_ProductsForm):
     def set_fields(cls, category, products):
         choices = []
         for product in products:
-            choice_text = "%s -- $%d" % (product.name, product.price)
+            if product.display_price:
+                choice_text = "%s -- $%d" % (product.name, product.price)
+            else:
+                choice_text = product.name
             choices.append((product.id, choice_text))
 
         if not category.required:
@@ -245,6 +256,8 @@ class _RadioButtonProductsForm(_ProductsForm):
             if quantity > 0:
                 initial[cls.FIELD] = product.id
                 break
+            else:
+                initial[cls.FIELD] = 0
 
         return initial
 
@@ -291,6 +304,94 @@ class _CheckboxProductsForm(_ProductsForm):
                 product_id = int(name[len(self.PRODUCT_PREFIX):])
                 yield (product_id, int(value))
 
+
+class _PayWhatYouWantProductsForm(_ProductsForm):
+    ''' Products entry form that allows users to enter their own
+    amount for products. '''
+
+    @classmethod
+    def set_fields(cls, category, products):
+        for product in products:
+            if product.description:
+                help_text = "Enter an amount in USD -- %s" % (
+                    product.description,
+                )
+            else:
+                help_text = "Enter an amount in USD"
+
+            field = forms.IntegerField(
+                label=product.name,
+                help_text=help_text,
+                min_value=0,
+                max_value=5000,
+            )
+            cls.base_fields[cls.field_name(product)] = field
+
+    @classmethod
+    def initial_data(cls, product_quantities):
+        initial = {}
+        for product, quantity in product_quantities:
+            initial[cls.field_name(product)] = quantity
+
+        return initial
+
+    def product_quantities(self):
+        for name, value in self.cleaned_data.items():
+            if name.startswith(self.PRODUCT_PREFIX):
+                product_id = int(name[len(self.PRODUCT_PREFIX):])
+                yield (product_id, value)
+
+class _CheckboxForLimitOneProductsForm(_ProductsForm):
+    @classmethod
+    def set_fields(cls, category, products):
+        for product in products:
+            if product.limit_per_user == 1:
+                if product.price == 0.00:
+                    if product.description:
+                        help_text = "Included in registration -- %s" % (product.description,)
+                    else:
+                        help_text = "Included in registration"
+                else:
+                    help_text = "$%d" % (product.price)
+                field = forms.BooleanField(
+                    label='%s' % (product.name,),
+                    help_text=help_text,
+                    required=False,
+                )
+                cls.base_fields[cls.field_name(product)] = field
+            else:
+                if product.description:
+                    help_text = "$%d each -- %s" % (
+                        product.price,
+                        product.description,
+                    )
+                else:
+                    help_text = "$%d each" % product.price
+
+                field = forms.IntegerField(
+                    label=product.name,
+                    help_text=help_text,
+                    min_value=0,
+                    max_value=500,  # Issue #19. We should figure out real limit.
+                )
+                cls.base_fields[cls.field_name(product)] = field
+
+    @classmethod
+    def initial_data(cls, product_quantities):
+        initial = {}
+        for product, quantity in product_quantities:
+            if product.limit_per_user == 1:
+                initial[cls.field_name(product)] = bool(quantity)
+            else:
+                initial[cls.field_name(product)] = quantity
+
+        return initial
+
+    def product_quantities(self):
+        for name, value in self.cleaned_data.items():
+            if name.startswith(self.PRODUCT_PREFIX):
+                product_id = int(name[len(self.PRODUCT_PREFIX):])
+                yield (product_id, int(value))
 
 class _ItemQuantityProductsForm(_ProductsForm):
     ''' Products entry form that allows users to select a product type, and

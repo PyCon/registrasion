@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import F, Q, Sum
+from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
@@ -249,6 +250,7 @@ class LineItem(models.Model):
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=8, decimal_places=2)
     product = models.ForeignKey(inventory.Product, null=True, blank=True, on_delete=models.CASCADE)
+    additional_data = JSONField(null=True, blank=True)
 
 
 @python_2_unicode_compatible
