@@ -370,7 +370,7 @@ class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
                 help_text = "Enter a donation amount in USD"
 
             quantity_field = forms.IntegerField(
-                label=product.name,
+                label="",
                 help_text="Quantity",
                 min_value=0,
                 max_value=500,
