@@ -127,6 +127,7 @@ def ProductsForm(category, products):
 class _HasProductsFields(object):
 
     PRODUCT_PREFIX = "product_"
+    PRICE_PREFIX = "price_"
 
     ''' Base class for product entry forms. '''
     def __init__(self, *a, **k):
@@ -141,6 +142,10 @@ class _HasProductsFields(object):
         return cls.PRODUCT_PREFIX + ("%d" % product.id)
 
     @classmethod
+    def price_field_name(cls, product):
+        return cls.PRICE_PREFIX + ("%d" % product.id)
+
+    @classmethod
     def set_fields(cls, category, products):
         ''' Sets the base_fields on this _ProductsForm to allow selecting
         from the provided products. '''
@@ -149,11 +154,11 @@ class _HasProductsFields(object):
     @classmethod
     def initial_data(cls, product_quantites):
         ''' Prepares initial data for an instance of this form.
-        product_quantities is a sequence of (product,quantity) tuples '''
+        product_quantities is a sequence of (product,quantity,price_override) tuples '''
         return {}
 
     def product_quantities(self):
-        ''' Yields a sequence of (product, quantity) tuples from the
+        ''' Yields a sequence of (product, quantity, price_override) tuples from the
         cleaned form data. '''
         return iter([])
 
@@ -209,7 +214,7 @@ class _QuantityBoxProductsForm(_ProductsForm):
     @classmethod
     def initial_data(cls, product_quantities):
         initial = {}
-        for product, quantity in product_quantities:
+        for product, quantity, _ in product_quantities:
             initial[cls.field_name(product)] = quantity
 
         return initial
@@ -218,7 +223,7 @@ class _QuantityBoxProductsForm(_ProductsForm):
         for name, value in self.cleaned_data.items():
             if name.startswith(self.PRODUCT_PREFIX):
                 product_id = int(name[len(self.PRODUCT_PREFIX):])
-                yield (product_id, value)
+                yield (product_id, value, None)
 
 
 class _RadioButtonProductsForm(_ProductsForm):
@@ -252,7 +257,7 @@ class _RadioButtonProductsForm(_ProductsForm):
     def initial_data(cls, product_quantities):
         initial = {}
 
-        for product, quantity in product_quantities:
+        for product, quantity, _ in product_quantities:
             if quantity > 0:
                 initial[cls.FIELD] = product.id
                 break
@@ -270,6 +275,7 @@ class _RadioButtonProductsForm(_ProductsForm):
             yield (
                 choice_value,
                 1 if ours == choice_value else 0,
+                None,
             )
 
     def add_product_error(self, product, error):
@@ -293,7 +299,7 @@ class _CheckboxProductsForm(_ProductsForm):
     @classmethod
     def initial_data(cls, product_quantities):
         initial = {}
-        for product, quantity in product_quantities:
+        for product, quantity, _ in product_quantities:
             initial[cls.field_name(product)] = bool(quantity)
 
         return initial
@@ -302,7 +308,7 @@ class _CheckboxProductsForm(_ProductsForm):
         for name, value in self.cleaned_data.items():
             if name.startswith(self.PRODUCT_PREFIX):
                 product_id = int(name[len(self.PRODUCT_PREFIX):])
-                yield (product_id, int(value))
+                yield (product_id, int(value), None)
 
 
 class _PayWhatYouWantProductsForm(_ProductsForm):
@@ -313,33 +319,39 @@ class _PayWhatYouWantProductsForm(_ProductsForm):
     def set_fields(cls, category, products):
         for product in products:
             if product.description:
-                help_text = "Enter an amount in USD -- %s" % (
+                help_text = "Enter a donation amount in USD -- %s" % (
                     product.description,
                 )
             else:
-                help_text = "Enter an amount in USD"
+                help_text = "Enter a donation amount in USD"
 
-            field = forms.IntegerField(
+            price_field = forms.IntegerField(
                 label=product.name,
                 help_text=help_text,
                 min_value=0,
                 max_value=5000,
             )
-            cls.base_fields[cls.field_name(product)] = field
+            cls.base_fields[cls.price_field_name(product)] = price_field
 
     @classmethod
     def initial_data(cls, product_quantities):
         initial = {}
-        for product, quantity in product_quantities:
-            initial[cls.field_name(product)] = quantity
+        for product, _, price_override in product_quantities:
+            if price_override is None or int(price_override) == 0:
+                initial[cls.price_field_name(product)] = 0
+            else:
+                initial[cls.price_field_name(product)] = price_override
 
         return initial
 
     def product_quantities(self):
         for name, value in self.cleaned_data.items():
-            if name.startswith(self.PRODUCT_PREFIX):
-                product_id = int(name[len(self.PRODUCT_PREFIX):])
-                yield (product_id, value)
+            if name.startswith(self.PRICE_PREFIX):
+                product_id = int(name[len(self.PRICE_PREFIX):])
+                if value is not None and value > 0:
+                    yield (product_id, 1, value)
+                else:
+                    yield (product_id, 0, None)
 
 class _CheckboxForLimitOneProductsForm(_ProductsForm):
     @classmethod
@@ -379,7 +391,7 @@ class _CheckboxForLimitOneProductsForm(_ProductsForm):
     @classmethod
     def initial_data(cls, product_quantities):
         initial = {}
-        for product, quantity in product_quantities:
+        for product, quantity, _ in product_quantities:
             if product.limit_per_user == 1:
                 initial[cls.field_name(product)] = bool(quantity)
             else:
@@ -391,7 +403,7 @@ class _CheckboxForLimitOneProductsForm(_ProductsForm):
         for name, value in self.cleaned_data.items():
             if name.startswith(self.PRODUCT_PREFIX):
                 product_id = int(name[len(self.PRODUCT_PREFIX):])
-                yield (product_id, int(value))
+                yield (product_id, int(value), None)
 
 class _ItemQuantityProductsForm(_ProductsForm):
     ''' Products entry form that allows users to select a product type, and
@@ -433,7 +445,7 @@ class _ItemQuantityProductsForm(_ProductsForm):
     def initial_data(cls, product_quantities):
         initial = {}
 
-        for product, quantity in product_quantities:
+        for product, quantity, _ in product_quantities:
             if quantity > 0:
                 initial[cls.CHOICE_FIELD] = product.id
                 initial[cls.QUANTITY_FIELD] = quantity
@@ -451,6 +463,7 @@ class _ItemQuantityProductsForm(_ProductsForm):
             yield (
                 choice_value,
                 our_quantity if our_choice == choice_value else 0,
+                None,
             )
 
     def add_product_error(self, product, error):
@@ -480,7 +493,7 @@ class _ItemQuantityProductsFormSet(_HasProductsFields, forms.BaseFormSet):
                 _ItemQuantityProductsForm.CHOICE_FIELD: product.id,
                 _ItemQuantityProductsForm.QUANTITY_FIELD: quantity,
             }
-            for product, quantity in product_quantities
+            for product, quantity, _ in product_quantities
             if quantity > 0
         ]
         return f
@@ -512,10 +525,10 @@ class _ItemQuantityProductsFormSet(_HasProductsFields, forms.BaseFormSet):
                         "You may only choose each product type once.",
                     )
                 products.add(product)
-                yield product, quantity
+                yield product, quantity, None
 
         for product in (all_products - products):
-            yield product, 0
+            yield product, 0, None
 
     def add_product_error(self, product, error):
         for form in self.forms:

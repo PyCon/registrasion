@@ -169,11 +169,11 @@ class CartController(object):
         # items override the old ones.
         all_product_quantities = dict(itertools.chain(
             ((i.product, i.quantity) for i in items_in_cart.all()),
-            product_quantities,
+            ((x[0], x[1]) for x in product_quantities),
         )).items()
 
         # Validate that the limits we're adding are OK
-        products = set(product for product, q in product_quantities)
+        products = set(product for product, q, po in product_quantities)
         try:
             self._test_limits(all_product_quantities)
         except CartValidationError as ve:
@@ -186,16 +186,20 @@ class CartController(object):
 
         new_items = []
         products = []
-        for product, quantity in product_quantities:
+        for product, quantity, price_override in product_quantities:
             products.append(product)
 
             if quantity == 0:
                 continue
 
+            if not product.pay_what_you_want:
+                price_override = None
+
             item = commerce.ProductItem(
                 cart=self.cart,
                 product=product,
                 quantity=quantity,
+                price_override=price_override,
             )
             new_items.append(item)
 

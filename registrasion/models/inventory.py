@@ -175,6 +175,10 @@ class Product(models.Model):
         decimal_places=2,
         verbose_name=_("Price"),
     )
+    pay_what_you_want = models.BooleanField(
+        verbose_name=("Pay What You Want"),
+        default=False,
+    )
     limit_per_user = models.PositiveIntegerField(
         null=True,
         blank=True,

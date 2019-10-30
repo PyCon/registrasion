@@ -142,10 +142,13 @@ class InvoiceController(ForId, object):
 
         for item in product_items:
             product = item.product
+            price = product.price
+            if item.price_override and product.pay_what_you_want:
+                price = item.price_override
             line_item = commerce.LineItem(
                 description=format_product(product),
                 quantity=item.quantity,
-                price=product.price,
+                price=price,
                 product=product,
             )
             line_items.append(line_item)

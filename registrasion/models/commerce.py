@@ -82,6 +82,7 @@ class ProductItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     product = models.ForeignKey(inventory.Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(db_index=True)
+    price_override = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True, default=None)
 
 
 @python_2_unicode_compatible

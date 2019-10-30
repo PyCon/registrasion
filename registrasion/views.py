@@ -524,12 +524,12 @@ def _handle_products(request, category, products, prefix):
     seen = set()
 
     for item in items:
-        quantities.append((item.product, item.quantity))
+        quantities.append((item.product, item.quantity, item.price_override))
         seen.add(item.product)
 
     zeros = set(products) - seen
     for product in zeros:
-        quantities.append((product, 0))
+        quantities.append((product, 0, None))
 
     products_form = ProductsForm(
         request.POST or None,
@@ -572,8 +572,19 @@ def _handle_products(request, category, products, prefix):
 def _set_quantities_from_products_form(products_form, current_cart):
 
     # Makes id_to_quantity, a dictionary from product ID to its quantity
-    quantities = list(products_form.product_quantities())
+    quantities = [
+        (product_id, quantity)
+        for product_id, quantity, _
+        in products_form.product_quantities()
+    ]
     id_to_quantity = dict(quantities)
+
+    price_overrides = [
+        (product_id, price_override)
+        for product_id, _, price_override
+        in products_form.product_quantities()
+    ]
+    id_to_price_override = dict(price_overrides)
 
     # Get the actual product objects
     pks = [i[0] for i in quantities]
@@ -585,7 +596,8 @@ def _set_quantities_from_products_form(products_form, current_cart):
 
     # Match the product objects to their quantities
     product_quantities = [
-        (product, id_to_quantity[product.id]) for product in products
+        (product, id_to_quantity[product.id], id_to_price_override[product.id])
+        for product in products
     ]
 
     try:
@@ -979,7 +991,7 @@ def amend_registration(request, user_id):
     if request.POST and formset.is_valid():
 
         pq = [
-            (f.cleaned_data["product"], f.cleaned_data["quantity"])
+            (f.cleaned_data["product"], f.cleaned_data["quantity"], None)
             for f in formset
             if "product" in f.cleaned_data and
             f.cleaned_data["product"] is not None
