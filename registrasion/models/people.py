@@ -40,7 +40,7 @@ class Attendee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     # Badge/profile is linked
     access_code = models.CharField(
-        max_length=6,
+        max_length=8,
         unique=True,
         db_index=True,
     )

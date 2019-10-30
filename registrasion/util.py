@@ -10,7 +10,7 @@ def generate_access_code():
     The access code will 4 characters long, which allows for 1,500,625
     unique codes, which really should be enough for anyone. '''
 
-    length = 6
+    length = 8
     # all upper-case letters + digits 1-9 (no 0 vs O confusion)
     chars = string.ascii_uppercase + string.digits[1:]
     # 6 chars => 35 ** 6 = 1838265625 (should be enough for anyone)
