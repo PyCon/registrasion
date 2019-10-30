@@ -331,6 +331,7 @@ class _PayWhatYouWantProductsForm(_ProductsForm):
                 help_text=help_text,
                 min_value=0,
                 max_value=5000,
+                required=False,
             )
             cls.base_fields[cls.price_field_name(product)] = price_field
 
@@ -373,6 +374,7 @@ class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
                 help_text="Quantity",
                 min_value=0,
                 max_value=500,
+                required=False,
             )
             cls.base_fields[cls.field_name(product)] = quantity_field
 
@@ -381,6 +383,7 @@ class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
                 help_text=help_text,
                 min_value=0,
                 max_value=5000,
+                required=False,
             )
             cls.base_fields[cls.price_field_name(product)] = price_field
 
