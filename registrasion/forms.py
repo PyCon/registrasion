@@ -100,6 +100,7 @@ def ProductsForm(category, products):
         cat.RENDER_TYPE_ITEM_QUANTITY: _ItemQuantityProductsForm,
         cat.RENDER_TYPE_CHECKBOX: _CheckboxProductsForm,
         cat.RENDER_TYPE_PWYW: _PayWhatYouWantProductsForm,
+        cat.RENDER_TYPE_PWYW_QUANTITY: _PayWhatYouWantWithQuantityProductsForm,
         cat.RENDER_TYPE_CHECKBOX_QUANTITY: _CheckboxForLimitOneProductsForm,
     }
 
@@ -325,7 +326,7 @@ class _PayWhatYouWantProductsForm(_ProductsForm):
             else:
                 help_text = "Enter a donation amount in USD"
 
-            price_field = forms.IntegerField(
+            price_field = forms.DecimalField(
                 label=product.name,
                 help_text=help_text,
                 min_value=0,
@@ -352,6 +353,61 @@ class _PayWhatYouWantProductsForm(_ProductsForm):
                     yield (product_id, 1, value)
                 else:
                     yield (product_id, 0, None)
+
+class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
+    ''' Products entry form that allows users to enter their own
+    amount and quantity for products. '''
+
+    @classmethod
+    def set_fields(cls, category, products):
+        for product in products:
+            if product.description:
+                help_text = "Enter a donation amount in USD -- %s" % (
+                    product.description,
+                )
+            else:
+                help_text = "Enter a donation amount in USD"
+
+            quantity_field = forms.IntegerField(
+                label=product.name,
+                help_text="Quantity",
+                min_value=0,
+                max_value=500,
+            )
+            cls.base_fields[cls.field_name(product)] = quantity_field
+
+            price_field = forms.DecimalField(
+                label=product.name,
+                help_text=help_text,
+                min_value=0,
+                max_value=5000,
+            )
+            cls.base_fields[cls.price_field_name(product)] = price_field
+
+    @classmethod
+    def initial_data(cls, product_quantities):
+        initial = {}
+        for product, quantity, price_override in product_quantities:
+            if price_override is None or int(price_override) == 0:
+                initial[cls.price_field_name(product)] = product.price
+            else:
+                initial[cls.price_field_name(product)] = price_override
+            if quantity > 0:
+                initial[cls.field_name(product)] = quantity
+            else:
+                initial[cls.field_name(product)] = 0
+
+        return initial
+
+    def product_quantities(self):
+        for name, value in self.cleaned_data.items():
+            if name.startswith(self.PRODUCT_PREFIX):
+                product_id = int(name[len(self.PRODUCT_PREFIX):])
+                product = inventory.Product.objects.get(pk=product_id)
+                price = product.price
+                if product.pay_what_you_want:
+                    price = self.cleaned_data[self.price_field_name(product)]
+                yield (product_id, value, price)
 
 class _CheckboxForLimitOneProductsForm(_ProductsForm):
     @classmethod

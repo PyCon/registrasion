@@ -48,6 +48,9 @@ class Category(models.Model):
             ``RENDER_TYPE_PWYW`` adds a freeform amount field for users to
             pay what they want.
 
+            ``RENDER_TYPE_PWYW_QUANTITY`` adds a freeform amount field for users
+            to pay what they want and select a quantity.
+
             ``RENDER_TYPE_CHECKBOX_QUANTITY`` similar to RENDER_TYPE_QUANTITY
             but displays products with a limit of 1 as a checkbox.
 
@@ -75,6 +78,7 @@ class Category(models.Model):
     RENDER_TYPE_CHECKBOX = 4
     RENDER_TYPE_PWYW = 5
     RENDER_TYPE_CHECKBOX_QUANTITY = 6
+    RENDER_TYPE_PWYW_QUANTITY = 7
 
     CATEGORY_RENDER_TYPES = [
         (RENDER_TYPE_RADIO, _("Radio button")),
@@ -82,6 +86,7 @@ class Category(models.Model):
         (RENDER_TYPE_ITEM_QUANTITY, _("Product selector and quantity box")),
         (RENDER_TYPE_CHECKBOX, _("Checkbox button")),
         (RENDER_TYPE_PWYW, _("User Selected Amount")),
+        (RENDER_TYPE_PWYW_QUANTITY, _("User Selected Amount and quantity box")),
         (RENDER_TYPE_CHECKBOX_QUANTITY, _("Checkbox/Quantity Hybrid")),
     ]
 
