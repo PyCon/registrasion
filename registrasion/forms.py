@@ -330,7 +330,6 @@ class _PayWhatYouWantProductsForm(_ProductsForm):
                 label=product.name,
                 help_text=help_text,
                 min_value=0,
-                max_value=5000,
                 required=False,
             )
             cls.base_fields[cls.price_field_name(product)] = price_field
@@ -363,11 +362,11 @@ class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
     def set_fields(cls, category, products):
         for product in products:
             if product.description:
-                help_text = "Enter a donation amount in USD -- %s" % (
+                help_text = "Enter a donation amount (per item) in USD -- %s" % (
                     product.description,
                 )
             else:
-                help_text = "Enter a donation amount in USD"
+                help_text = "Enter a donation amount (per item) in USD"
 
             quantity_field = forms.IntegerField(
                 label="",
@@ -382,7 +381,6 @@ class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
                 label=product.name,
                 help_text=help_text,
                 min_value=0,
-                max_value=5000,
                 required=False,
             )
             cls.base_fields[cls.price_field_name(product)] = price_field
