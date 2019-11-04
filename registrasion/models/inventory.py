@@ -119,6 +119,14 @@ class Category(models.Model):
         help_text=_("The registration form will render this category in this "
                     "style."),
     )
+    form_css_class = models.CharField(
+        verbose_name=_("CSS Class for container holding product fields"),
+        max_length=512, null=True, blank=True,
+    )
+    product_css_class = models.CharField(
+        verbose_name=_("CSS Class for each product field"),
+        max_length=512, null=True, blank=True,
+    )
 
 
 @python_2_unicode_compatible

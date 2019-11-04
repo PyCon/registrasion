@@ -24,7 +24,8 @@ class ProductInline(admin.TabularInline):
 class CategoryAdmin(admin.ModelAdmin):
     model = inventory.Category
     fields = ("name", "description", "required", "render_type",
-              "limit_per_user", "order",)
+              "limit_per_user", "order",
+              "form_css_class", "product_css_class")
     list_display = ("name", "description")
     inlines = [
         ProductInline,

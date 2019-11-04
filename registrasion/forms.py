@@ -106,10 +106,11 @@ def ProductsForm(category, products):
 
     # Produce a subclass of _ProductsForm which we can alter the base_fields on
     class ProductsForm(RENDER_TYPES[category.render_type]):
+        helper = FormHelper()
+        helper.form_tag = False
+
         def __init__(self, *args, **kwargs):
             super(ProductsForm, self).__init__(*args, **kwargs)
-            self.helper = FormHelper()
-            self.helper.form_tag = False
 
     products = list(products)
     products.sort(key=lambda prod: prod.order)
@@ -212,6 +213,21 @@ class _QuantityBoxProductsForm(_ProductsForm):
             )
             cls.base_fields[cls.field_name(product)] = field
 
+        layout_objects = []
+        for product in products:
+            layout_objects.append(
+                Div(
+                    cls.field_name(product),
+                    css_class=category.product_css_class if category.product_css_class else "",
+                )
+            )
+        cls.helper.layout = Layout(
+            Div(
+                *layout_objects,
+                css_class=category.form_css_class if category.form_css_class else "",
+            )
+        )
+
     @classmethod
     def initial_data(cls, product_quantities):
         initial = {}
@@ -252,6 +268,20 @@ class _RadioButtonProductsForm(_ProductsForm):
             choices=choices,
             empty_value=0,
             coerce=int,
+        )
+
+        layout_objects = []
+        layout_objects.append(
+            Div(
+                cls.FIELD,
+                css_class=category.product_css_class if category.product_css_class else "",
+            )
+        )
+        cls.helper.layout = Layout(
+            Div(
+                *layout_objects,
+                css_class=category.form_css_class if category.form_css_class else "",
+            )
         )
 
     @classmethod
@@ -297,6 +327,21 @@ class _CheckboxProductsForm(_ProductsForm):
             )
             cls.base_fields[cls.field_name(product)] = field
 
+        layout_objects = []
+        for product in products:
+            layout_objects.append(
+                Div(
+                    cls.field_name(product),
+                    css_class=category.product_css_class if category.product_css_class else "",
+                )
+            )
+        cls.helper.layout = Layout(
+            Div(
+                *layout_objects,
+                css_class=category.form_css_class if category.form_css_class else "",
+            )
+        )
+
     @classmethod
     def initial_data(cls, product_quantities):
         initial = {}
@@ -334,6 +379,21 @@ class _PayWhatYouWantProductsForm(_ProductsForm):
             )
             cls.base_fields[cls.price_field_name(product)] = price_field
 
+        layout_objects = []
+        for product in products:
+            layout_objects.append(
+                Div(
+                    cls.price_field_name(product),
+                    css_class=category.product_css_class if category.product_css_class else "",
+                )
+            )
+        cls.helper.layout = Layout(
+            Div(
+                *layout_objects,
+                css_class=category.form_css_class if category.form_css_class else "",
+            )
+        )
+
     @classmethod
     def initial_data(cls, product_quantities):
         initial = {}
@@ -368,6 +428,14 @@ class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
             else:
                 help_text = "Enter a donation amount (per item) in USD"
 
+            price_field = forms.DecimalField(
+                label=product.name,
+                help_text=help_text,
+                min_value=0,
+                required=False,
+            )
+            cls.base_fields[cls.price_field_name(product)] = price_field
+
             quantity_field = forms.IntegerField(
                 label="",
                 help_text="Quantity",
@@ -377,13 +445,27 @@ class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
             )
             cls.base_fields[cls.field_name(product)] = quantity_field
 
-            price_field = forms.DecimalField(
-                label=product.name,
-                help_text=help_text,
-                min_value=0,
-                required=False,
+        layout_objects = []
+        for product in products:
+            css_class = "pwywwq-group"
+            if category.product_css_class:
+                css_class += f" {category.product_css_class}"
+            layout_objects.append(
+                Div(
+                    cls.price_field_name(product),
+                    cls.field_name(product),
+                    css_class=css_class,
+                )
             )
-            cls.base_fields[cls.price_field_name(product)] = price_field
+        css_class = "pwywwq-grid"
+        if category.form_css_class:
+            css_class += f" {category.form_css_class}"
+        cls.helper.layout = Layout(
+            Div(
+                *layout_objects,
+                css_class=css_class,
+            )
+        )
 
     @classmethod
     def initial_data(cls, product_quantities):
@@ -444,6 +526,21 @@ class _CheckboxForLimitOneProductsForm(_ProductsForm):
                     max_value=500,  # Issue #19. We should figure out real limit.
                 )
                 cls.base_fields[cls.field_name(product)] = field
+
+        layout_objects = []
+        for product in products:
+            layout_objects.append(
+                Div(
+                    cls.field_name(product),
+                    css_class=category.product_css_class if category.product_css_class else "",
+                )
+            )
+        cls.helper.layout = Layout(
+            Div(
+                *layout_objects,
+                css_class=category.form_css_class if category.form_css_class else "",
+            )
+        )
 
     @classmethod
     def initial_data(cls, product_quantities):
