@@ -676,6 +676,7 @@ def checkout(request, user_id=None):
 
     if "fix_errors" in request.GET and request.GET["fix_errors"] == "true":
         current_cart.fix_simple_errors()
+        return redirect("review")
 
     try:
         current_invoice = InvoiceController.for_cart(current_cart.cart)
