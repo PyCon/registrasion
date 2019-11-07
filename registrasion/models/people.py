@@ -1,5 +1,8 @@
 from registrasion import util
+from registrasion.models.inventory import Category
+from registrasion.controllers.item import ItemController
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
@@ -36,6 +39,15 @@ class Attendee(models.Model):
             if Attendee.objects.filter(access_code=access_code).count() == 0:
                 self.access_code = access_code
         return super(Attendee, self).save(*a, **k)
+
+    @property
+    def paid_registration(self):
+        ticket_category = Category.objects.get(pk=settings.TICKET_PRODUCT_CATEGORY)
+        purchased_tickets = ItemController(self.user).items_purchased(category=ticket_category)
+        for paq in purchased_tickets:
+            if paq.product.price > 0:
+                return True
+        return False
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     # Badge/profile is linked
