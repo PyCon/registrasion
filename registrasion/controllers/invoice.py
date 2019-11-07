@@ -201,7 +201,7 @@ class InvoiceController(ForId, object):
         commerce.LineItem.objects.bulk_create(line_items)
 
         cls._apply_credit_notes(invoice)
-        cls.email_on_invoice_creation(invoice)
+        #cls.email_on_invoice_creation(invoice)
 
         return invoice
 
