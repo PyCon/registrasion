@@ -18,6 +18,9 @@ class ApplyCreditNoteForm(forms.Form):
         choices. '''
         self.user = user
         super(ApplyCreditNoteForm, self).__init__(*a, **k)
+        self.helper = FormHelper()
+        self.helper.form_method = "POST"
+        self.helper.add_input(Submit('submit', 'Apply to invoice', css_class="btn-primary"))
 
         self.fields["invoice"].choices = self._unpaid_invoices
 
@@ -59,6 +62,12 @@ class CancellationFeeForm(forms.Form):
 
     required_css_class = 'label-required'
 
+    def __init__(self, *a, **k):
+        super(CancellationFeeForm, self).__init__(*a, **k)
+        self.helper = FormHelper()
+        self.helper.form_method = "POST"
+        self.helper.add_input(Submit('submit', 'Generate fee', css_class="btn-primary"))
+
     percentage = forms.DecimalField(
         required=True,
         min_value=0,
@@ -70,6 +79,12 @@ class ManualCreditNoteRefundForm(forms.ModelForm):
 
     required_css_class = 'label-required'
 
+    def __init__(self, *a, **k):
+        super(ManualCreditNoteRefundForm, self).__init__(*a, **k)
+        self.helper = FormHelper()
+        self.helper.form_method = "POST"
+        self.helper.add_input(Submit('submit', 'Mark as refunded', css_class="btn-primary"))
+
     class Meta:
         model = commerce.ManualCreditNoteRefund
         fields = ["reference"]
@@ -78,6 +93,12 @@ class ManualCreditNoteRefundForm(forms.ModelForm):
 class ManualPaymentForm(forms.ModelForm):
 
     required_css_class = 'label-required'
+
+    def __init__(self, *a, **k):
+        super(ManualPaymentForm, self).__init__(*a, **k)
+        self.helper = FormHelper()
+        self.helper.form_method = "POST"
+        self.helper.add_input(Submit('submit', 'Apply Payment', css_class="btn-primary"))
 
     class Meta:
         model = commerce.ManualPayment
