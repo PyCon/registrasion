@@ -211,6 +211,10 @@ class Product(models.Model):
         verbose_name=("Display price"),
         default=True,
     )
+    hide_line_item = models.BooleanField(
+        verbose_name=("Hide LineItem"),
+        default=False,
+    )
     additional_data = JSONField(null=True, blank=True)
 
 
