@@ -83,6 +83,7 @@ class ProductItem(models.Model):
     product = models.ForeignKey(inventory.Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(db_index=True)
     price_override = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True, default=None)
+    additional_data = JSONField(null=True, blank=True)
 
 
 @python_2_unicode_compatible
