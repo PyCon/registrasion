@@ -173,7 +173,7 @@ class CartController(object):
         )).items()
 
         # Validate that the limits we're adding are OK
-        products = set(product for product, q, po in product_quantities)
+        products = set(product for product, q, po, ad in product_quantities)
         try:
             self._test_limits(all_product_quantities)
         except CartValidationError as ve:
@@ -186,7 +186,7 @@ class CartController(object):
 
         new_items = []
         products = []
-        for product, quantity, price_override in product_quantities:
+        for product, quantity, price_override, additional_data in product_quantities:
             products.append(product)
 
             if quantity == 0:
@@ -200,6 +200,7 @@ class CartController(object):
                 product=product,
                 quantity=quantity,
                 price_override=price_override,
+                additional_data=additional_data,
             )
             new_items.append(item)
 

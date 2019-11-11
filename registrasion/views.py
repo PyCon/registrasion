@@ -16,7 +16,7 @@ from .controllers.item import ItemController
 from .controllers.product import ProductController
 from .exceptions import CartValidationError
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from django import forms as django_forms
 from django.conf import settings
@@ -524,12 +524,12 @@ def _handle_products(request, category, products, prefix):
     seen = set()
 
     for item in items:
-        quantities.append((item.product, item.quantity, item.price_override))
+        quantities.append((item.product, item.quantity, item.price_override, item.additional_data))
         seen.add(item.product)
 
     zeros = set(products) - seen
     for product in zeros:
-        quantities.append((product, 0, None))
+        quantities.append((product, 0, None, None))
 
     products_form = ProductsForm(
         request.POST or None,
@@ -574,31 +574,44 @@ def _set_quantities_from_products_form(products_form, current_cart):
     # Makes id_to_quantity, a dictionary from product ID to its quantity
     quantities = [
         (product_id, quantity)
-        for product_id, quantity, _
+        for product_id, quantity, _, _
         in products_form.product_quantities()
     ]
     id_to_quantity = dict(quantities)
 
     price_overrides = [
         (product_id, price_override)
-        for product_id, _, price_override
+        for product_id, _, price_override, _
         in products_form.product_quantities()
     ]
     id_to_price_override = dict(price_overrides)
 
+    selections_with_additional_data = defaultdict(list)
+    for product_id, quantity, _, additional_data in products_form.product_quantities():
+        if additional_data is not None:
+            selections_with_additional_data[product_id] += [(quantity, additional_data)]
+
     # Get the actual product objects
     pks = [i[0] for i in quantities]
     products = inventory.Product.objects.filter(
-        id__in=pks,
+        id__in=pks, additional_data__isnull=True,
+    ).select_related("category").order_by("id")
+
+    products_with_additional_data = inventory.Product.objects.filter(
+        id__in=pks, additional_data__isnull=False,
     ).select_related("category").order_by("id")
 
     quantities.sort(key=lambda i: i[0])
 
     # Match the product objects to their quantities
     product_quantities = [
-        (product, id_to_quantity[product.id], id_to_price_override[product.id])
+        (product, id_to_quantity[product.id], id_to_price_override[product.id], None)
         for product in products
     ]
+
+    for product in products_with_additional_data:
+        for quantity, additional_data in selections_with_additional_data[product.id]:
+            product_quantities.append((product, quantity, None, additional_data))
 
     try:
         current_cart.set_quantities(product_quantities)
