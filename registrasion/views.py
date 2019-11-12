@@ -192,7 +192,7 @@ def guided_registration(request, page_number=None):
 
         if sections and request.method == "POST":
             for section in sections:
-                if section.form.errors:
+                if section.form.contains_errors:
                     break
             else:
                 # We've successfully processed everything
@@ -463,7 +463,7 @@ def product_category(request, category_id):
         p = _handle_products(request, category, products, PRODUCTS_FORM_PREFIX)
         products_form, discounts, products_handled = p
 
-    if request.POST and not voucher_handled and not products_form.errors:
+    if request.POST and not voucher_handled and not products_form.contains_errors:
         # Only return to the dashboard if we didn't add a voucher code
         # and if there's no errors in the products form
         if products_form.has_changed():
@@ -554,7 +554,7 @@ def _handle_products(request, category, products, prefix):
                     None,
                     "You must have at least one item from this category",
                 )
-    handled = False if products_form.errors else True
+    handled = False if products_form.contains_errors else True
 
     # Making this a function to lazily evaluate when it's displayed
     # in templates.

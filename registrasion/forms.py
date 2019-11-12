@@ -4,9 +4,10 @@ from .models import inventory
 
 from django import forms
 from django.db.models import Q
+from django.template.loader import render_to_string
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Field, Fieldset, Div, HTML, ButtonHolder, Submit
+from crispy_forms.layout import LayoutObject, Layout, Field, Fieldset, Div, HTML, ButtonHolder, Submit, TEMPLATE_PACK
 
 
 class ApplyCreditNoteForm(forms.Form):
@@ -123,6 +124,7 @@ def ProductsForm(category, products):
         cat.RENDER_TYPE_PWYW: _PayWhatYouWantProductsForm,
         cat.RENDER_TYPE_PWYW_QUANTITY: _PayWhatYouWantWithQuantityProductsForm,
         cat.RENDER_TYPE_CHECKBOX_QUANTITY: _CheckboxForLimitOneProductsForm,
+        cat.RENDER_TYPE_CHILDCARE: _ChildcareProductsForm,
     }
 
     # Produce a subclass of _ProductsForm which we can alter the base_fields on
@@ -179,6 +181,10 @@ class _HasProductsFields(object):
         ''' Prepares initial data for an instance of this form.
         product_quantities is a sequence of (product,quantity,price_override) tuples '''
         return {}
+
+    @property
+    def contains_errors(self):
+        return True if self.errors else False
 
     def product_quantities(self):
         ''' Yields a sequence of (product, quantity, price_override, additional_data) tuples from the
@@ -377,6 +383,190 @@ class _CheckboxProductsForm(_ProductsForm):
             if name.startswith(self.PRODUCT_PREFIX):
                 product_id = int(name[len(self.PRODUCT_PREFIX):])
                 yield (product_id, int(value), None, None)
+
+
+class LayoutFormset(LayoutObject):
+    """
+    Renders an entire formset, as though it were a Field.
+    Accepts the names (as a string) of formset and helper as they
+    are defined in the context
+
+    Examples:
+        Formset(formset)
+        Formset(formset, helper)
+    """
+
+    template = "forms/formset.html"
+
+    def __init__(self, formset, helper=None, template=None, label=None):
+
+        self.formset = formset
+        self.helper = helper
+
+        # crispy_forms/layout.py:302 requires us to have a fields property
+        self.fields = []
+
+        # Overrides class variable with an instance level variable
+        if template:
+            self.template = template
+
+    def render(self, form, form_style, context, **kwargs):
+        formset = self.formset
+        helper = self.helper
+        # closes form prematurely if this isn't explicitly stated
+        if helper:
+            helper.form_tag = False
+
+        context.update({'formset': formset, 'helper': helper})
+        return render_to_string(self.template, context.flatten())
+
+
+class _ChildForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        self.helper = helper = FormHelper()
+        self.helper.disable_csrf = True
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    'dates',
+                    css_class="registration-side-by-side",
+                ),
+                Div(
+                    'child_first_name',
+                    'child_last_name',
+                    'child_age',
+                    css_class="registration-side-by-side",
+                ),
+                Div(
+                    Div(
+                        'emergency_contact_1_first_name',
+                        'emergency_contact_1_last_name',
+                        'emergency_contact_1_phone',
+                        css_class="registration-side-by-side",
+                    ),
+                    Div(
+                        'emergency_contact_2_first_name',
+                        'emergency_contact_2_last_name',
+                        'emergency_contact_2_phone',
+                        css_class="registration-side-by-side",
+                    ),
+                ),
+                css_class="childcare-child-form",
+            )
+        )
+        super(_ChildForm, self).__init__(*args, **kwargs)
+
+    dates = forms.MultipleChoiceField(
+        label='Select Dates',
+        choices=(),
+        widget=forms.CheckboxSelectMultiple(),
+    )
+
+    child_first_name = forms.CharField(
+        label='Child\'s First Name',
+    )
+    child_last_name = forms.CharField(
+        label='Child\'s Last Name',
+    )
+    child_age = forms.CharField(
+        label='Child\'s Age',
+    )
+
+    emergency_contact_1_first_name = forms.CharField(
+        label='Emergency Contact 1 First Name',
+    )
+    emergency_contact_1_last_name = forms.CharField(
+        label='Emergency Contact 1 Last Name',
+    )
+    emergency_contact_1_phone = forms.CharField(
+        label='Emergency Contact 1 Phone',
+    )
+
+    emergency_contact_2_first_name = forms.CharField(
+        label='Emergency Contact 2 First Name',
+    )
+    emergency_contact_2_last_name = forms.CharField(
+        label='Emergency Contact 2 Last Name',
+    )
+    emergency_contact_2_phone = forms.CharField(
+        label='Emergency Contact 2 Phone',
+    )
+
+_ChildFormSet = forms.formset_factory(_ChildForm, extra=1)
+
+
+class _ChildcareProductsForm(_ProductsForm):
+
+    PRODUCT_ID = None
+    DATES_CHOICES = []
+    FORMSET = _ChildFormSet
+
+    def __init__(self, *args, **kwargs):
+        initial = self.initial_data(kwargs["product_quantities"])
+        self.formset = _ChildFormSet(args[0], prefix=f'product_{self.PRODUCT_ID}', initial=initial)
+        self.formset.form.base_fields['dates'].choices=self.DATES_CHOICES
+
+        layout_objects = [
+            LayoutFormset(self.formset)
+        ]
+
+        self.helper.layout = Layout(
+            Div(
+                *layout_objects,
+            )
+        )
+
+        super(_ChildcareProductsForm, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def set_fields(cls, category, products):
+        for i, product in enumerate(products):
+            cls.PRODUCT_ID = product.id
+            cls.DATES_CHOICES = [(i, d) for i, d in enumerate(product.additional_data['available_dates'])]
+
+    def is_valid(self, *args, **kwargs):
+        return (super(_ChildcareProductsForm, self).is_valid() and self.formset.is_valid())
+
+    def has_changed(self, *args, **kwargs):
+        return (
+            super(_ChildcareProductsForm, self).has_changed()
+            or any([f.has_changed() for f in self.formset.forms])
+            or len(self.formset.forms) == 0
+        )
+
+    @property
+    def contains_errors(self):
+        return True if self.errors or any(self.formset.errors) else False
+
+    @classmethod
+    def initial_data(cls, product_quantities):
+        initial = []
+        for product, quantity, _, additional_data in product_quantities:
+            if quantity > 0:
+                initial.append({
+                    'dates': additional_data['dates'],
+                    'child_first_name': additional_data['child_first_name'],
+                    'child_last_name': additional_data['child_last_name'],
+                    'child_age': additional_data['child_age'],
+                    'emergency_contact_1_first_name': additional_data['emergency_contact_1_first_name'],
+                    'emergency_contact_1_last_name': additional_data['emergency_contact_1_last_name'],
+                    'emergency_contact_1_phone': additional_data['emergency_contact_1_phone'],
+                    'emergency_contact_2_first_name': additional_data['emergency_contact_2_first_name'],
+                    'emergency_contact_2_last_name': additional_data['emergency_contact_2_last_name'],
+                    'emergency_contact_2_phone': additional_data['emergency_contact_2_phone'],
+                })
+        return initial
+
+    def product_quantities(self):
+        for item in self.formset.cleaned_data:
+            if len(item.get('dates', [])) > 0:
+                yield (self.PRODUCT_ID, len(item['dates']), None, item)
+            else:
+                yield (self.PRODUCT_ID, 0, None, {})
+        else:
+            yield (self.PRODUCT_ID, 0, None, {})
 
 
 class _PayWhatYouWantProductsForm(_ProductsForm):

@@ -79,6 +79,7 @@ class Category(models.Model):
     RENDER_TYPE_PWYW = 5
     RENDER_TYPE_CHECKBOX_QUANTITY = 6
     RENDER_TYPE_PWYW_QUANTITY = 7
+    RENDER_TYPE_CHILDCARE = 8
 
     CATEGORY_RENDER_TYPES = [
         (RENDER_TYPE_RADIO, _("Radio button")),
@@ -88,6 +89,7 @@ class Category(models.Model):
         (RENDER_TYPE_PWYW, _("User Selected Amount")),
         (RENDER_TYPE_PWYW_QUANTITY, _("User Selected Amount and quantity box")),
         (RENDER_TYPE_CHECKBOX_QUANTITY, _("Checkbox/Quantity Hybrid")),
+        (RENDER_TYPE_CHILDCARE, _("Childcare with additional info")),
     ]
 
     name = models.CharField(
