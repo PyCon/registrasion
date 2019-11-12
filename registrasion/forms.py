@@ -651,6 +651,7 @@ class _YoungCodersProductsForm(_ProductsForm):
 
     DATES_CHOICES = []
     FORMSET = _YoungCoderFormSet
+    PRODUCT_ID = None
 
     def __init__(self, *args, **kwargs):
         initial = self.initial_data(kwargs["product_quantities"])
