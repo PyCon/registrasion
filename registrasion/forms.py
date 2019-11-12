@@ -125,6 +125,7 @@ def ProductsForm(category, products):
         cat.RENDER_TYPE_PWYW_QUANTITY: _PayWhatYouWantWithQuantityProductsForm,
         cat.RENDER_TYPE_CHECKBOX_QUANTITY: _CheckboxForLimitOneProductsForm,
         cat.RENDER_TYPE_CHILDCARE: _ChildcareProductsForm,
+        cat.RENDER_TYPE_YOUNGCODERS: _YoungCodersProductsForm,
     }
 
     # Produce a subclass of _ProductsForm which we can alter the base_fields on
@@ -439,6 +440,7 @@ class _ChildForm(forms.Form):
                     'child_age',
                     css_class="registration-side-by-side",
                 ),
+                'child_needs',
                 Div(
                     Div(
                         'emergency_contact_1_first_name',
@@ -472,6 +474,11 @@ class _ChildForm(forms.Form):
     )
     child_age = forms.CharField(
         label='Child\'s Age',
+    )
+
+    child_needs = forms.CharField(
+        label='Special Instructions/Needs',
+        required=False,
     )
 
     emergency_contact_1_first_name = forms.CharField(
@@ -565,6 +572,142 @@ class _ChildcareProductsForm(_ProductsForm):
                 yield (self.PRODUCT_ID, len(item['dates']), None, item)
             else:
                 yield (self.PRODUCT_ID, 0, None, {})
+        else:
+            yield (self.PRODUCT_ID, 0, None, {})
+
+
+class _YoungCoderForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        self.helper = helper = FormHelper()
+        self.helper.disable_csrf = True
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    'child_first_name',
+                    'child_last_name',
+                    'child_age',
+                    css_class="registration-side-by-side",
+                ),
+                'child_needs',
+                Div(
+                    Div(
+                        'emergency_contact_1_first_name',
+                        'emergency_contact_1_last_name',
+                        'emergency_contact_1_phone',
+                        css_class="registration-side-by-side",
+                    ),
+                    Div(
+                        'emergency_contact_2_first_name',
+                        'emergency_contact_2_last_name',
+                        'emergency_contact_2_phone',
+                        css_class="registration-side-by-side",
+                    ),
+                ),
+                css_class="childcare-child-form",
+            )
+        )
+        super(_YoungCoderForm, self).__init__(*args, **kwargs)
+
+    child_first_name = forms.CharField(
+        label='Child\'s First Name',
+    )
+    child_last_name = forms.CharField(
+        label='Child\'s Last Name',
+    )
+    child_age = forms.CharField(
+        label='Child\'s Age',
+    )
+    child_needs = forms.CharField(
+        label='Special Instructions/Needs',
+        required=False,
+    )
+
+    emergency_contact_1_first_name = forms.CharField(
+        label='Emergency Contact 1 First Name',
+    )
+    emergency_contact_1_last_name = forms.CharField(
+        label='Emergency Contact 1 Last Name',
+    )
+    emergency_contact_1_phone = forms.CharField(
+        label='Emergency Contact 1 Phone',
+    )
+
+    emergency_contact_2_first_name = forms.CharField(
+        label='Emergency Contact 2 First Name',
+    )
+    emergency_contact_2_last_name = forms.CharField(
+        label='Emergency Contact 2 Last Name',
+    )
+    emergency_contact_2_phone = forms.CharField(
+        label='Emergency Contact 2 Phone',
+    )
+
+_YoungCoderFormSet = forms.formset_factory(_YoungCoderForm, extra=1)
+
+
+class _YoungCodersProductsForm(_ProductsForm):
+
+    DATES_CHOICES = []
+    FORMSET = _YoungCoderFormSet
+
+    def __init__(self, *args, **kwargs):
+        initial = self.initial_data(kwargs["product_quantities"])
+        self.formset = _YoungCoderFormSet(args[0], prefix=f'product_{self.PRODUCT_ID}', initial=initial)
+
+        layout_objects = [
+            LayoutFormset(self.formset)
+        ]
+
+        self.helper.layout = Layout(
+            Div(
+                *layout_objects,
+            )
+        )
+
+        super(_YoungCodersProductsForm, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def set_fields(cls, category, products):
+        for i, product in enumerate(products):
+            cls.PRODUCT_ID = product.id
+
+    def is_valid(self, *args, **kwargs):
+        return (super(_YoungCodersProductsForm, self).is_valid() and self.formset.is_valid())
+
+    def has_changed(self, *args, **kwargs):
+        return (
+            super(_YoungCodersProductsForm, self).has_changed()
+            or any([f.has_changed() for f in self.formset.forms])
+            or len(self.formset.forms) == 0
+        )
+
+    @property
+    def contains_errors(self):
+        return True if self.errors or any(self.formset.errors) else False
+
+    @classmethod
+    def initial_data(cls, product_quantities):
+        initial = []
+        for product, quantity, _, additional_data in product_quantities:
+            if quantity > 0:
+                initial.append({
+                    'child_first_name': additional_data['child_first_name'],
+                    'child_last_name': additional_data['child_last_name'],
+                    'child_age': additional_data['child_age'],
+                    'emergency_contact_1_first_name': additional_data['emergency_contact_1_first_name'],
+                    'emergency_contact_1_last_name': additional_data['emergency_contact_1_last_name'],
+                    'emergency_contact_1_phone': additional_data['emergency_contact_1_phone'],
+                    'emergency_contact_2_first_name': additional_data['emergency_contact_2_first_name'],
+                    'emergency_contact_2_last_name': additional_data['emergency_contact_2_last_name'],
+                    'emergency_contact_2_phone': additional_data['emergency_contact_2_phone'],
+                })
+        return initial
+
+    def product_quantities(self):
+        for item in self.formset.cleaned_data:
+            yield (self.PRODUCT_ID, 1, None, item)
         else:
             yield (self.PRODUCT_ID, 0, None, {})
 
