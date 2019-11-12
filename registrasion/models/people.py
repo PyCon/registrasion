@@ -41,13 +41,10 @@ class Attendee(models.Model):
         return super(Attendee, self).save(*a, **k)
 
     @property
-    def paid_registration(self):
+    def registration_allows_housing(self):
         ticket_category = Category.objects.get(pk=settings.TICKET_PRODUCT_CATEGORY)
         purchased_tickets = ItemController(self.user).items_purchased(category=ticket_category)
-        for paq in purchased_tickets:
-            if paq.product.price > 0:
-                return True
-        return False
+        return(any(p.product.allow_housing for p in purchased_tickets))
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     # Badge/profile is linked
