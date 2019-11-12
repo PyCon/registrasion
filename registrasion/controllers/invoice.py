@@ -150,6 +150,7 @@ class InvoiceController(ForId, object):
                 quantity=item.quantity,
                 price=price,
                 product=product,
+                additional_data=item.additional_data,
             )
             line_items.append(line_item)
         for item in discount_items:
@@ -158,6 +159,7 @@ class InvoiceController(ForId, object):
                 quantity=item.quantity,
                 price=cls.resolve_discount_value(item) * -1,
                 product=item.product,
+                additional_data=item.additional_data,
             )
             line_items.append(line_item)
 
