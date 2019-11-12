@@ -221,6 +221,11 @@ class Product(models.Model):
     )
     additional_data = JSONField(null=True, blank=True)
 
+    allow_housing = models.BooleanField(
+        verbose_name=("Allow Housing Registration"),
+        default=False,
+    )
+
 
 @python_2_unicode_compatible
 class Voucher(models.Model):
