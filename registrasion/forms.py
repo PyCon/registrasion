@@ -1066,6 +1066,10 @@ class VoucherForm(forms.Form):
             )
         )
 
+    @property
+    def contains_errors(self):
+        return True if self.errors else False
+
     required_css_class = 'label-required'
 
     voucher = forms.CharField(
