@@ -6,6 +6,7 @@ from . import util
 from .models import commerce
 from .models import inventory
 from .models import people
+from .models import conditions
 from .controllers.batch import BatchController
 from .controllers.cart import CartController
 from .controllers.category import CategoryController
@@ -268,8 +269,11 @@ def _guided_registration_products(request, mode):
         if mode == GUIDED_MODE_TICKETS_ONLY:
             filtered_products = []
             for product in available_products:
-                if product.flagbase_set.select_subclasses("voucherflag"):
-                    filtered_products.append(product)
+                product_conditions = product.flagbase_set.select_subclasses(conditions.VoucherFlag)
+                for condition in product_conditions:
+                    if isinstance(condition, conditions.VoucherFlag):
+                        filtered_products.append(product)
+                        break
             if len(filtered_products) == 1:
                 available_products = filtered_products
 
@@ -462,8 +466,11 @@ def product_category(request, category_id):
         if category_id == settings.TICKET_PRODUCT_CATEGORY:
             filtered_products = []
             for product in products:
-                if product.flagbase_set.select_subclasses("voucherflag"):
-                    filtered_products.append(product)
+                product_conditions = product.flagbase_set.select_subclasses(conditions.VoucherFlag)
+                for condition in product_conditions:
+                    if isinstance(condition, conditions.VoucherFlag):
+                        filtered_products.append(product)
+                        break
             if len(filtered_products) == 1:
                 products = filtered_products
 
