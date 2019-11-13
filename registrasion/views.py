@@ -264,6 +264,15 @@ def _guided_registration_products(request, mode):
             products=all_products,
         ))
 
+        # Check for conditions where we may hide all but one ticket type.
+        if mode == GUIDED_MODE_TICKETS_ONLY:
+            filtered_products = []
+            for product in available_products:
+                if product.flagbase_set.select_subclasses("voucherflag"):
+                    filtered_products.append(product)
+            if len(filtered_products) == 1:
+                available_products = filtered_products
+
         if len(available_products) == 0:
             return []
 
@@ -449,6 +458,14 @@ def product_category(request, category_id):
             request.user,
             category=category,
         )
+
+        if category_id == settings.TICKET_PRODUCT_CATEGORY:
+            filtered_products = []
+            for product in products:
+                if product.flagbase_set.select_subclasses("voucherflag"):
+                    filtered_products.append(product)
+            if len(filtered_products) == 1:
+                products = filtered_products
 
         if not products:
             messages.warning(
