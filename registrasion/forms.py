@@ -531,7 +531,7 @@ class _ChildcareProductsForm(_ProductsForm):
     def set_fields(cls, category, products):
         for i, product in enumerate(products):
             cls.PRODUCT_ID = product.id
-            cls.DATES_CHOICES = [(i, d) for i, d in enumerate(product.additional_data['available_dates'])]
+            cls.DATES_CHOICES = product.additional_data['available_dates']
 
     def is_valid(self, *args, **kwargs):
         return (super(_ChildcareProductsForm, self).is_valid() and self.formset.is_valid())
@@ -569,6 +569,10 @@ class _ChildcareProductsForm(_ProductsForm):
     def product_quantities(self):
         for item in self.formset.cleaned_data:
             if len(item.get('dates', [])) > 0:
+                item['line_item_info'] = (
+                    f'Child: {item["child_first_name"]} {item["child_last_name"]} '
+                    f' - Dates: {", ".join(item["dates"])}'
+                )
                 yield (self.PRODUCT_ID, len(item['dates']), None, item)
             else:
                 yield (self.PRODUCT_ID, 0, None, {})
@@ -708,6 +712,7 @@ class _YoungCodersProductsForm(_ProductsForm):
 
     def product_quantities(self):
         for item in self.formset.cleaned_data:
+            item['line_item_info'] = f'Child: {item["child_first_name"]} {item["child_last_name"]}'
             yield (self.PRODUCT_ID, 1, None, item)
         else:
             yield (self.PRODUCT_ID, 0, None, {})
