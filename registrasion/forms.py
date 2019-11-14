@@ -507,6 +507,7 @@ _ChildFormSet = forms.formset_factory(_ChildForm, extra=1)
 class _ChildcareProductsForm(_ProductsForm):
 
     PRODUCT_ID = None
+    PRODUCT_PRICE = 0
     DATES_CHOICES = []
     FORMSET = _ChildFormSet
 
@@ -531,6 +532,7 @@ class _ChildcareProductsForm(_ProductsForm):
     def set_fields(cls, category, products):
         for i, product in enumerate(products):
             cls.PRODUCT_ID = product.id
+            cls.PRODUCT_PRICE = product.price
             cls.DATES_CHOICES = product.additional_data['available_dates']
 
     def is_valid(self, *args, **kwargs):
@@ -573,6 +575,15 @@ class _ChildcareProductsForm(_ProductsForm):
                     f'Child: {item["child_first_name"]} {item["child_last_name"]} '
                     f' - Dates: {", ".join(item["dates"])}'
                 )
+                if len(item['dates']) == 3:
+                    item['adhoc_discount'] = {
+                        'description': 'Childcare - 3rd Day Free',
+                        'price': int(self.PRODUCT_PRICE),
+                        'line_item_info': (
+                            f'Child: {item["child_first_name"]} {item["child_last_name"]} '
+                            f' - Dates: {", ".join(item["dates"])}'
+                        ),
+                    }
                 yield (self.PRODUCT_ID, len(item['dates']), None, item)
             else:
                 yield (self.PRODUCT_ID, 0, None, {})

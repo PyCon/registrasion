@@ -153,6 +153,16 @@ class InvoiceController(ForId, object):
                 additional_data=item.additional_data,
             )
             line_items.append(line_item)
+            if item.additional_data and item.additional_data.get('adhoc_discount', False):
+                adhoc_discount = item.additional_data['adhoc_discount']
+                adhoc_discountlineitem = commerce.LineItem(
+                    description=adhoc_discount.get('description', 'Ad Hoc Discount'),
+                    quantity=1,
+                    price=adhoc_discount.get('price', 0) * -1,
+                    product=product,
+                    additional_data={'line_item_info': adhoc_discount.get('line_item_info', None)},
+                )
+                line_items.append(adhoc_discountlineitem)
         for item in discount_items:
             line_item = commerce.LineItem(
                 description=format_discount(item.discount, item.product),
