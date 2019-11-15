@@ -828,6 +828,52 @@ def invoice(request, invoice_id, access_code=None):
     return render(request, "registrasion/invoice.html", data)
 
 
+@waffle_flag('registration_open')
+def invoice_plain(request, invoice_id, access_code=None):
+    ''' Displays an invoice.
+
+    This view is not authenticated, but it will only allow access to either:
+    the user the invoice belongs to; staff; or a request made with the correct
+    access code.
+
+    Arguments:
+
+        invoice_id (castable to int): The invoice_id for the invoice you want
+            to view.
+
+        access_code (Optional[str]): The access code for the user who owns
+            this invoice.
+
+    Returns:
+        render:
+            Renders ``registrasion/invoice.html``, with the following
+            data::
+
+                {
+                    "invoice": models.commerce.Invoice(),
+                }
+
+    Raises:
+        Http404: if the current user cannot view this invoice and the correct
+            access_code is not provided.
+
+    '''
+
+    current_invoice = InvoiceController.for_id_or_404(invoice_id)
+
+    if not current_invoice.can_view(
+            user=request.user,
+            access_code=access_code,
+            ):
+        raise Http404()
+
+    data = {
+        "invoice": current_invoice.invoice,
+    }
+
+    return render(request, "registrasion/invoice_plain.html", data)
+
+
 def _staff_only(user):
     ''' Returns true if the user is staff. '''
     return user.is_staff
