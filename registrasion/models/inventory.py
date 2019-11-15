@@ -226,6 +226,10 @@ class Product(models.Model):
         default=False,
     )
 
+    is_donation = models.BooleanField(
+        default=False,
+    )
+
 
 @python_2_unicode_compatible
 class Voucher(models.Model):
