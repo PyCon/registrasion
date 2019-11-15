@@ -782,9 +782,9 @@ class _PayWhatYouWantProductsForm(_ProductsForm):
             if name.startswith(self.PRICE_PREFIX):
                 product_id = int(name[len(self.PRICE_PREFIX):])
                 if value is not None and value > 0:
-                    yield (product_id, 1, value, None)
+                    yield (product_id, 1, value, {})
                 else:
-                    yield (product_id, 0, None, None)
+                    yield (product_id, 0, None, {})
 
 class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
     ''' Products entry form that allows users to enter their own
@@ -862,7 +862,7 @@ class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
                 price = product.price
                 if product.pay_what_you_want:
                     price = self.cleaned_data[self.price_field_name(product)]
-                yield (product_id, value, price, None)
+                yield (product_id, value, price, {})
 
 class _CheckboxForLimitOneProductsForm(_ProductsForm):
     @classmethod

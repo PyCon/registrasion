@@ -611,9 +611,9 @@ def _set_quantities_from_products_form(products_form, current_cart):
     id_to_price_override = dict(price_overrides)
 
     selections_with_additional_data = defaultdict(list)
-    for product_id, quantity, _, additional_data in products_form.product_quantities():
+    for product_id, quantity, price_override, additional_data in products_form.product_quantities():
         if additional_data is not None:
-            selections_with_additional_data[product_id] += [(quantity, additional_data)]
+            selections_with_additional_data[product_id] += [(quantity, price_override, additional_data)]
 
     # Get the actual product objects
     pks = [i[0] for i in quantities]
@@ -634,8 +634,8 @@ def _set_quantities_from_products_form(products_form, current_cart):
     ]
 
     for product in products_with_additional_data:
-        for quantity, additional_data in selections_with_additional_data[product.id]:
-            product_quantities.append((product, quantity, None, additional_data))
+        for quantity, price_override, additional_data in selections_with_additional_data[product.id]:
+            product_quantities.append((product, quantity, price_override, additional_data))
 
     try:
         current_cart.set_quantities(product_quantities)
