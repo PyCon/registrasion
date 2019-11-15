@@ -191,11 +191,12 @@ def guided_registration(request, page_number=None):
             attendee.save()
             return redirect("review")
 
+        section_errors = []
         if sections and request.method == "POST":
             for section in sections:
                 if section.form.contains_errors:
-                    break
-            else:
+                    section_errors.append(section.title)
+            if len(section_errors) == 0:
                 # We've successfully processed everything
                 return next_step
 
@@ -204,6 +205,7 @@ def guided_registration(request, page_number=None):
         "sections": sections,
         "title": title,
         "total_steps": TOTAL_PAGES,
+        "section_errors": section_errors,
     }
     return render(request, "registrasion/guided_registration.html", data)
 
