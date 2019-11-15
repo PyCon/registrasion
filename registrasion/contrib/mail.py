@@ -51,19 +51,29 @@ def __send_email__(template_prefix, to, kind, **kwargs):
     message_html = render_to_string(message_template, ctx)
     message_plaintext = strip_tags(message_html)
 
-    from_email = settings.DEFAULT_FROM_EMAIL
+    try:
+        from_email = kwargs['from_email']
+    except KeyError:
+        from_email = settings.DEFAULT_FROM_EMAIL
+
+    bcc_emails = []
+    try:
+        bcc_emails.append(settings.ENVELOPE_BCC_LIST)
+    except AttributeError:
+        pass
 
     try:
-        bcc_email = settings.ENVELOPE_BCC_LIST
-    except AttributeError:
-        bcc_email = None
+        for bcc_email in kwargs['bcc_emails']:
+            bcc_emails.append(bcc_email)
+    except KeyError:
+        pass
 
     email = EmailMultiAlternatives(
         subject,
         message_plaintext,
         from_email,
         to,
-        bcc=bcc_email,
+        bcc=bcc_emails,
     )
     email.attach_alternative(message_html, "text/html")
     email.send()
