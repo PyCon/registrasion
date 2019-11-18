@@ -7,6 +7,8 @@ from django.conf import settings
 from django.db.models import Sum
 from urllib.parse import urlencode
 
+from registrasion.views import _staff_only
+
 register = template.Library()
 
 
@@ -198,3 +200,9 @@ def include_if_exists(parser, token):
 def addstr(arg1, arg2):
     """concatenate arg1 & arg2"""
     return str(arg1) + str(arg2)
+
+
+@register.simple_tag(takes_context=True)
+def registrasion_admin(context):
+    user = user_for_context(context)
+    return _staff_only(user)

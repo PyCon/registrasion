@@ -20,6 +20,7 @@ class Attendee(models.Model):
 
     class Meta:
         app_label = "registrasion"
+        permissions = (("registrasion_admin", "Registrasion Admin"),)
 
     def __str__(self):
         return "%s" % self.user

@@ -704,7 +704,7 @@ def checkout(request, user_id=None):
     '''
 
     if user_id is not None:
-        if request.user.is_staff:
+        if request.user.has_perm('registrasion.registrasion_admin'):
             user = User.objects.get(id=int(user_id))
         else:
             raise Http404()
@@ -878,7 +878,8 @@ def invoice_plain(request, invoice_id, access_code=None):
 
 def _staff_only(user):
     ''' Returns true if the user is staff. '''
-    return user.is_staff
+    print(user)
+    return user.has_perm('registrasion.registrasion_admin')
 
 
 @user_passes_test(_staff_only)

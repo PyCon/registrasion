@@ -253,7 +253,7 @@ class InvoiceController(ForId, object):
         if user == self.invoice.user:
             return True
 
-        if user.is_staff:
+        if user.has_perm('registrasion.registrasion_admin'):
             return True
 
         if self.invoice.user.attendee.access_code == access_code:
