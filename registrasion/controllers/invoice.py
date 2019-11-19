@@ -146,7 +146,7 @@ class InvoiceController(ForId, object):
         for item in product_items:
             product = item.product
             price = product.price
-            if item.price_override and product.pay_what_you_want:
+            if item.price_override is not None and product.pay_what_you_want:
                 price = item.price_override
             line_item = commerce.LineItem(
                 description=format_product(product),
