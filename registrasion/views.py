@@ -878,7 +878,6 @@ def invoice_plain(request, invoice_id, access_code=None):
 
 def _staff_only(user):
     ''' Returns true if the user is staff. '''
-    print(user)
     return user.has_perm('registrasion.registrasion_admin')
 
 
