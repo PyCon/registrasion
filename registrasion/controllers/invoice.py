@@ -445,7 +445,8 @@ class InvoiceController(ForId, object):
             "first_name": invoice.user.attendee.attendeeprofilebase.attendeeprofile.first_name,
             "last_name": invoice.user.attendee.attendeeprofilebase.attendeeprofile.last_name,
             "donation_time": invoice.paymentbase_set.order_by('-time').first().time,
-            "donation_amount": sum([i.quantity*i.price for i in line_items])
+            "donation_items": sum([i.quantity for i in line_items]),
+            "donation_amount": sum([i.quantity*i.price for i in line_items]),
         }
 
         send_email(
@@ -487,7 +488,7 @@ class InvoiceController(ForId, object):
         if new_status == commerce.Invoice.STATUS_PAID:
             donations_to_acknowledge = defaultdict(list)
             for line_item in invoice.lineitem_set.all():
-                if line_item.product.is_donation:
+                if line_item.product.is_donation and line_item.price > 0:
                     template = line_item.product.additional_data['donation_acknowledgement_template']
                     donations_to_acknowledge[template].append(line_item)
             for kind, line_items in donations_to_acknowledge.items():
