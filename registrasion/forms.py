@@ -862,6 +862,8 @@ class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
                 price = product.price
                 if product.pay_what_you_want:
                     price = self.cleaned_data[self.price_field_name(product)]
+                if value is None:
+                    value = 0
                 yield (product_id, value, price, {})
 
 class _CheckboxForLimitOneProductsForm(_ProductsForm):
