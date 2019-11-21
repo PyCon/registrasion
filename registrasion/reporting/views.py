@@ -87,6 +87,7 @@ def items_sold():
 
     line_items = commerce.LineItem.objects.filter(
         invoice__status=commerce.Invoice.STATUS_PAID,
+        cancelled=False,
     ).select_related("invoice")
 
     line_items = line_items.order_by(
