@@ -17,6 +17,7 @@ from django.urls import reverse
 
 from registrasion.controllers.cart import CartController
 from registrasion.controllers.item import ItemController
+from registrasion.models import inventory
 from registrasion.models import commerce
 from registrasion.models import people
 from registrasion import util
@@ -929,3 +930,23 @@ def manifest(request, form):
     return ListReport("Manifest", headings, output)
 
     # attendeeprofilebase.attendee_name()
+
+
+@report_view("Vouchers")
+def vouchers(request, form):
+    ''' Shows vouchers along with their limits and uses '''
+    vouchers = inventory.Voucher.objects.order_by("recipient")
+
+    headings = ["Recipient", "Code", "Limit", "Used", "Remaining"]
+    data = []
+    for v in vouchers.all():
+        used = len(v.cart_set.filter(status=commerce.Cart.STATUS_PAID))
+        data.append((
+            v.recipient,
+            v.code,
+            v.limit,
+            used,
+            v.limit - used,
+        ))
+
+    return ListReport("Vouchers", headings, data)
