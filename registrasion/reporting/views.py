@@ -480,7 +480,7 @@ def attendee(request, form, user_id=None):
     except people.AttendeeProfileBase.DoesNotExist:
         fields = []
 
-    exclude = set(["attendeeprofilebase_ptr", "id"])
+    exclude = set(["attendeeprofilebase_ptr"])
     for field in fields:
         if field.name in exclude:
             # Not actually important
@@ -500,18 +500,21 @@ def attendee(request, form, user_id=None):
 
     reports.append(ListReport("Profile", ["", ""], profile_data))
 
-    links = []
-    links.append((
-        reverse(views.badge, args=[user_id]),
-        "View badge",
+    hotel_reservations = attendee.hotelreservation_set
+    reports.append(ListReport(
+        "Hotel Reservations",
+        ["Reservation ID", "Status"],
+        [(r.reservation_id, r.status) for r in hotel_reservations.all()],
     ))
+
+    links = []
     links.append((
         reverse(views.amend_registration, args=[user_id]),
         "Amend current cart",
     ))
     links.append((
-        reverse(views.extend_reservation, args=[user_id]),
-        "Extend reservation",
+        reverse(views.cancel_line_items, args=[user_id]),
+        "Cancel line items",
     ))
 
     reports.append(Links("Actions for " + name, links))
@@ -553,6 +556,18 @@ def attendee(request, form, user_id=None):
         link_view=views.credit_note,
     ))
 
+    # All Line Items
+    line_items = commerce.LineItem.objects.filter(
+        invoice__in=invoices, invoice__status=commerce.Invoice.STATUS_PAID
+    )
+
+    reports.append(QuerysetReport(
+        "Line Items",
+        ["invoice__id", "description", "quantity", "price"],
+        line_items,
+        link_view=views.invoice,
+    ))
+
     # All payments
     payments = commerce.PaymentBase.objects.filter(
         invoice__user=attendee.user,
@@ -590,7 +605,7 @@ def attendee_list(request):
     )
 
     headings = [
-        "User ID", "Name", "Email", "Has registered",
+        "User ID", "Attendee ID", "Name", "Email", "Completed Registration",
     ]
 
     data = []
@@ -598,6 +613,7 @@ def attendee_list(request):
     for a in attendees:
         data.append([
             a.user.id,
+            a.id,
             (profiles_by_attendee[a].attendee_name()
                 if a in profiles_by_attendee else ""),
             a.user.email,
@@ -605,7 +621,7 @@ def attendee_list(request):
         ])
 
     # Sort by whether they've registered, then ID.
-    data.sort(key=lambda a: (-a[3], a[0]))
+    data.sort(key=lambda a: (-a[4], a[0]))
 
     return AttendeeListReport("Attendees", headings, data, link_view=attendee)
 

@@ -72,7 +72,7 @@ class CreditNoteController(ForId, object):
 
         cancellation_fee = self.credit_note.value * percentage / 100
         due = datetime.timedelta(days=1)
-        item = [("Cancellation fee", cancellation_fee)]
+        item = [("Cancellation fee", cancellation_fee, 1)]
         invoice = InvoiceController.manual_invoice(
             self.credit_note.invoice.user, due, item
         )

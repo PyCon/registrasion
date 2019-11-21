@@ -76,7 +76,7 @@ class InvoiceController(ForId, object):
 
     @classmethod
     @transaction.atomic
-    def manual_invoice(cls, user, due_delta, description_price_pairs):
+    def manual_invoice(cls, user, due_delta, description_price_quantity_tuples):
         ''' Generates an invoice for arbitrary items, not held in a user's
         cart.
 
@@ -84,9 +84,9 @@ class InvoiceController(ForId, object):
             user (User): The user the invoice is being generated for.
             due_delta (datetime.timedelta): The length until the invoice is
                 due.
-            description_price_pairs ([(str, long or Decimal), ...]): A list of
-                pairs. Each pair consists of the description for each line item
-                and the price for that line item. The price will be cast to
+            description_price_quantity_tuples ([(str, long or Decimal, int), ...]): A list of
+                tuples. Each tuple consists of the description for each line item,
+                the price for that line item, and the quantity. The price will be cast to
                 Decimal.
 
         Returns:
@@ -94,12 +94,13 @@ class InvoiceController(ForId, object):
         '''
 
         line_items = []
-        for description, price in description_price_pairs:
+        for description, price, quantity in description_price_quantity_tuples:
             line_item = commerce.LineItem(
                 description=description,
-                quantity=1,
+                quantity=quantity,
                 price=Decimal(price),
                 product=None,
+                is_refund=(price < 0),
             )
             line_items.append(line_item)
 
@@ -488,7 +489,7 @@ class InvoiceController(ForId, object):
         if new_status == commerce.Invoice.STATUS_PAID:
             donations_to_acknowledge = defaultdict(list)
             for line_item in invoice.lineitem_set.all():
-                if line_item.product.is_donation and line_item.price > 0:
+                if line_item.product is not None and line_item.product.is_donation and line_item.price > 0:
                     template = line_item.product.additional_data['donation_acknowledgement_template']
                     donations_to_acknowledge[template].append(line_item)
             for kind, line_items in donations_to_acknowledge.items():

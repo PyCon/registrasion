@@ -5,6 +5,7 @@ from .models import inventory
 from django import forms
 from django.db.models import Q
 from django.template.loader import render_to_string
+from django.urls import reverse
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import LayoutObject, Layout, Field, Fieldset, Div, HTML, ButtonHolder, Submit, TEMPLATE_PACK
@@ -57,6 +58,25 @@ class ApplyCreditNoteForm(forms.Form):
         required=True,
         help_text="Have you verified that this is the correct invoice?",
     )
+
+
+class CancelLineItemsForm(forms.Form):
+
+    required_css_class = 'label-required'
+
+    def __init__(self, user_id, *a, **k):
+        super(CancelLineItemsForm, self).__init__(*a, **k)
+        self.helper = FormHelper()
+        self.helper.form_method = "POST"
+        self.helper.form_action = reverse("cancel_line_items", args=[user_id])
+        self.helper.add_input(Submit('submit', 'Cancel Line Items', css_class="btn-primary"))
+
+    line_items = forms.MultipleChoiceField(
+        label="Line Items to Cancel",
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    cancellation_fee = forms.DecimalField()
 
 
 class CancellationFeeForm(forms.Form):

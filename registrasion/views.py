@@ -28,6 +28,7 @@ from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mass_mail
+from django.db import transaction
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -1058,6 +1059,10 @@ def amend_registration(request, user_id):
     ).select_related("product")
     initial = [{"product": i.product, "quantity": i.quantity} for i in items]
 
+    line_items = commerce.LineItem.objects.filter(
+        invoice__user_id=user.id, invoice__status=commerce.Invoice.STATUS_PAID, cancelled=False,
+    )
+
     StaffProductsFormSet = forms.staff_products_formset_factory(user)
     formset = StaffProductsFormSet(
         request.POST or None,
@@ -1107,12 +1112,72 @@ def amend_registration(request, user_id):
     data = {
         "user": user,
         "paid": ic.items_purchased(),
+        "line_items": line_items.all(),
         "cancelled": ic.items_released(),
         "form": formset,
         "voucher_form": voucher_form,
     }
 
     return render(request, "registrasion/amend_registration.html", data)
+
+
+@user_passes_test(_staff_only)
+@transaction.atomic
+def cancel_line_items(request, user_id):
+
+    user = User.objects.get(id=int(user_id))
+    line_items = commerce.LineItem.objects.filter(
+        invoice__user_id=user.id, invoice__status=commerce.Invoice.STATUS_PAID, cancelled=False, is_refund=False,
+    )
+
+    form = forms.CancelLineItemsForm(user_id, request.POST or None)
+    form.fields['line_items'].choices = [(li.id, li) for li in line_items.all()]
+
+    if request.POST and form.is_valid():
+        items = []
+        line_items = commerce.LineItem.objects.filter(id__in=form.cleaned_data['line_items']).all()
+        for line_item in line_items:
+            line_item.cancelled = True
+            product_items = commerce.ProductItem.objects.filter(
+                cart__id=line_item.invoice.cart.id,
+                product__id=line_item.product.id,
+            )
+            if len(product_items) == 0:
+                print(f'unable to find productitem for {line_item}')
+            if len(product_items) == 1:
+                product_item = product_items.first()
+                print(f'matched line item {line_item} to {product_item}')
+                product_item.quantity -= line_item.quantity
+                product_item.save()
+            else:
+                for product_item in product_items.all():
+                    if product_item.additional_data == line_item.additional_data:
+                        print(f'matched line item {line_item} to {product_item}')
+                        product_item.quantity -= line_item.quantity
+                        product_item.save()
+                    else:
+                        print(f'unmatched productitem for {line_item}')
+            line_item.save()
+            preamble = "Cancellation"
+            if line_item.price > 0:
+                preamble = "Refund"
+            amount = 0-line_item.price
+            if line_item.product.is_donation:
+                preamble = "Cancellation - Unrefundable"
+                amount = 0
+            items.append((f'{preamble}: {line_item.description}', amount, line_item.quantity))
+        if form.cleaned_data['cancellation_fee'] > 0:
+            items.append(("Cancellation Fee", form.cleaned_data['cancellation_fee'], 1))
+        invoice = InvoiceController.manual_invoice(
+            user, datetime.timedelta(), items
+        )
+        return redirect("invoice", invoice.id)
+
+    data = {
+        "user": user,
+        "cancel_line_items_form": form
+    }
+    return render(request, "registrasion/cancel_line_items.html", data)
 
 
 @user_passes_test(_staff_only)

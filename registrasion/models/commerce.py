@@ -253,6 +253,8 @@ class LineItem(models.Model):
     price = models.DecimalField(max_digits=8, decimal_places=2)
     product = models.ForeignKey(inventory.Product, null=True, blank=True, on_delete=models.CASCADE)
     additional_data = JSONField(null=True, blank=True)
+    is_refund = models.BooleanField(default=False)
+    cancelled = models.BooleanField(default=False)
 
 
 @python_2_unicode_compatible
