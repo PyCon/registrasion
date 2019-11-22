@@ -66,6 +66,13 @@ def available_credit(context):
 
 
 @register.simple_tag(takes_context=True)
+def credit_notes(context):
+    return commerce.CreditNote.objects.filter(
+        invoice__user=user_for_context(context),
+    )
+
+
+@register.simple_tag(takes_context=True)
 def invoices(context):
     '''
 

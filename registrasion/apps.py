@@ -6,3 +6,6 @@ class RegistrasionConfig(AppConfig):
     name = "registrasion"
     label = "registrasion"
     verbose_name = "Registrasion"
+
+    def ready(self):
+        import registrasion.models.signals

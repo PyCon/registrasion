@@ -1,0 +1,1 @@
+Refund processed -- Invoice {{ credit_note.invoice.id }}

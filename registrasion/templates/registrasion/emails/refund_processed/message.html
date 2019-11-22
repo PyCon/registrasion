@@ -1,0 +1,16 @@
+{% load i18n %}
+{% load registrasion_tags %}
+
+{% url "invoice" credt_note.invoice.id credit_note.invoice.user.attendee.access_code as invoice_url %}
+
+<p>{{ credit_note.invoice.user.attendee.attendeeprofilebase.attendeeprofile.first_name }} {{ credit_note.invoice.user.attendee.attendeeprofilebase.attendeeprofile.last_name }},</p>
+
+<p>${{ amount }} USD has been refunded with reference: {{ refund.reference }}.</p>
+
+<p>This credit note resulted from excess funds on Invoice {{ credit_note.invoice.id }}. <a href="https://{{ current_site.domain|add:invoice_url }}">View this invoice on us.pycon.org</a>.</p>
+
+{% if refund.charge %}
+<p>The refund was applied to your card ending in {{ refund.charge.card.last4 }}.
+{% endif %}
+
+<p>- Registration Team</p>
