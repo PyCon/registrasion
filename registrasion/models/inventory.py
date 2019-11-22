@@ -267,8 +267,8 @@ class Voucher(models.Model):
         self.code = self.normalise_code(self.code)
         super(Voucher, self).save(*a, **k)
 
-    recipient = models.CharField(max_length=64, verbose_name=_("Recipient"))
-    code = models.CharField(max_length=16,
+    recipient = models.CharField(max_length=128, verbose_name=_("Recipient"))
+    code = models.CharField(max_length=32,
                             unique=True,
                             verbose_name=_("Voucher code"))
     limit = models.PositiveIntegerField(verbose_name=_("Voucher use limit"))
