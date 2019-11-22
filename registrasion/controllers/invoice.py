@@ -100,7 +100,7 @@ class InvoiceController(ForId, object):
                 quantity=quantity,
                 price=Decimal(price),
                 product=None,
-                is_refund=(price < 0),
+                is_refund=(price <= 0),
             )
             line_items.append(line_item)
 
