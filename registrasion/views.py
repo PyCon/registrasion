@@ -19,6 +19,8 @@ from .exceptions import CartValidationError
 
 from collections import namedtuple, defaultdict
 
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Submit
 from django import forms as django_forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -1069,6 +1071,9 @@ def amend_registration(request, user_id):
         initial=initial,
         prefix="products",
     )
+    helper = FormHelper()
+    helper.form_tag = False
+    helper.add_input(Submit('submit', 'Submit', css_class="btn-primary"))
 
     for item, form in zip(items, formset):
         queryset = inventory.Product.objects.filter(id=item.product.id)
@@ -1082,7 +1087,7 @@ def amend_registration(request, user_id):
     if request.POST and formset.is_valid():
 
         pq = [
-            (f.cleaned_data["product"], f.cleaned_data["quantity"], None)
+            (f.cleaned_data["product"], f.cleaned_data["quantity"], None, None)
             for f in formset
             if "product" in f.cleaned_data and
             f.cleaned_data["product"] is not None
@@ -1115,6 +1120,7 @@ def amend_registration(request, user_id):
         "line_items": line_items.all(),
         "cancelled": ic.items_released(),
         "form": formset,
+        "helper": helper,
         "voucher_form": voucher_form,
     }
 

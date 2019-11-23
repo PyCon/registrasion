@@ -335,6 +335,7 @@ class CartController(object):
         items = commerce.ProductItem.objects.filter(
             product__category__required=True,
             cart__user=self.cart.user,
+            quantity__gt=0,
         ).exclude(
             cart__status=commerce.Cart.STATUS_RELEASED,
         )
