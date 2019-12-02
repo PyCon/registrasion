@@ -546,15 +546,18 @@ def _handle_products(request, category, products, prefix):
 
     # Create initial data for each of products in category
     items = commerce.ProductItem.objects.filter(
-        product__in=products,
+        product__category=category,
         cart=current_cart.cart,
     ).select_related("product")
     quantities = []
     seen = set()
 
     for item in items:
-        quantities.append((item.product, item.quantity, item.price_override, item.additional_data))
-        seen.add(item.product)
+        if item.product in products:
+            quantities.append((item.product, item.quantity, item.price_override, item.additional_data))
+            seen.add(item.product)
+        else:
+            item.delete()
 
     zeros = set(products) - seen
     for product in zeros:
