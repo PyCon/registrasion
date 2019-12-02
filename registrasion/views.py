@@ -1172,7 +1172,7 @@ def cancel_line_items(request, user_id):
                 preamble = "Refund"
             amount = 0-line_item.price
             if line_item.product.is_donation:
-                preamble = "Cancellation - Unrefundable"
+                preamble = "Cancellation - Non-refundable"
                 amount = 0
             items.append((f'{preamble}: {line_item.description}', amount, line_item.quantity))
         if form.cleaned_data['cancellation_fee'] > 0:
