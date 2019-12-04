@@ -35,6 +35,8 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.template import Context, Template, loader
+from django.views.decorators.clickjacking import xframe_options_sameorigin
+
 from waffle.decorators import waffle_flag
 
 User = get_user_model()
@@ -837,6 +839,7 @@ def invoice(request, invoice_id, access_code=None):
 
 
 @waffle_flag('registration_open')
+@xframe_options_sameorigin
 def invoice_plain(request, invoice_id, access_code=None):
     ''' Displays an invoice.
 

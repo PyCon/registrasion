@@ -35,7 +35,7 @@ public = [
     url(r"^checkout/([0-9]+)$", checkout, name="checkout"),
     url(r"^credit_note/([0-9]+)$", credit_note, name="credit_note"),
     url(r"^extend/([0-9]+)$", extend_reservation, name="extend_reservation"),
-    url(r"^invoice/([0-9]+)/plain$", invoice_plain, name="invoice"),
+    url(r"^invoice/([0-9]+)/plain$", invoice_plain, name="invoice_plain"),
     url(r"^invoice/([0-9]+)$", invoice, name="invoice"),
     url(r"^invoice/([0-9]+)/([A-Z0-9]+)$", invoice, name="invoice"),
     url(r"^invoice/([0-9]+)/manual_payment$",
