@@ -1167,6 +1167,9 @@ class InvoicesWithProductAndStatusForm(forms.Form):
         product = [int(i) for i in product]
 
         super(InvoicesWithProductAndStatusForm, self).__init__(*a, **k)
+        self.helper = FormHelper()
+        self.helper.form_method = "POST"
+        self.helper.add_input(Submit('submit', 'Submit', css_class="btn-primary"))
 
         qs = commerce.Invoice.objects.filter(
             status=status or commerce.Invoice.STATUS_UNPAID,
