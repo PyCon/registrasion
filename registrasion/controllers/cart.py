@@ -436,7 +436,7 @@ class CartController(object):
         ))
 
         not_available = products - available
-        zeros = [(product, 0, 0) for product in not_available]
+        zeros = [(product, 0, 0, None) for product in not_available]
 
         self.set_quantities(zeros)
 
