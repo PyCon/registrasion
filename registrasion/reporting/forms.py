@@ -66,6 +66,21 @@ class UserIdForm(forms.Form):
     )
 
 
+class VoucherIdForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        super(VoucherIdForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+
+    required_css_class = 'label-required'
+
+    voucher = forms.IntegerField(
+        label="Voucher ID",
+        required=False,
+    )
+
+
 class ProposalKindForm(forms.Form):
 
     def __init__(self, *args, **kwargs):

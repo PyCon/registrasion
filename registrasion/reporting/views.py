@@ -932,22 +932,75 @@ def manifest(request, form):
 
     # attendeeprofilebase.attendee_name()
 
+class VoucherListReport(ListReport):
 
-@report_view("Vouchers")
-def vouchers(request, form):
+    def get_link(self, argument):
+        return reverse(self._link_view) + "?voucher=%d" % int(argument)
+
+
+def voucher_list(request):
     ''' Shows vouchers along with their limits and uses '''
     vouchers = inventory.Voucher.objects.order_by("recipient")
 
-    headings = ["Recipient", "Code", "Limit", "Used", "Remaining"]
+    headings = ["ID", "Recipient", "Code", "Limit", "Used", "Remaining"]
     data = []
     for v in vouchers.all():
         used = len(v.cart_set.filter(status=commerce.Cart.STATUS_PAID))
-        data.append((
+        data.append([
+            v.id,
             v.recipient,
             v.code,
             v.limit,
             used,
             v.limit - used,
-        ))
+        ])
 
-    return ListReport("Vouchers", headings, data)
+    return VoucherListReport("Vouchers", headings, data, link_view=voucher)
+
+@report_view("Vouchers", form_type=forms.VoucherIdForm)
+def voucher(request, form, voucher_id=None):
+    ''' Shows vouchers along with their limits and uses '''
+    if voucher_id is None and form.cleaned_data["voucher"] is not None:
+        voucher_id = form.cleaned_data["voucher"]
+
+    if voucher_id is None:
+        return voucher_list(request)
+
+    voucher = inventory.Voucher.objects.get(id=voucher_id)
+    used = len(voucher.cart_set.filter(status=commerce.Cart.STATUS_PAID))
+
+    paid_carts = voucher.cart_set.filter(status=commerce.Cart.STATUS_PAID)
+    users_redeemed = []
+    for cart in paid_carts:
+        users_redeemed.append([cart.user.id, cart.user.attendee.attendeeprofilebase.attendeeprofile.legal_name, cart.user.email])
+
+    users_pending = []
+    active_carts = voucher.cart_set.filter(status=commerce.Cart.STATUS_ACTIVE)
+    for cart in active_carts:
+        users_pending.append([cart.user.id, cart.user.attendee.attendeeprofilebase.attendeeprofile.legal_name, cart.user.email])
+
+    reports = []
+
+    reports.append(ListReport(
+        "Voucher Information",
+        ["Recipient", "Code", "Limit", "Used", "Remaining"],
+        [[voucher.recipient, voucher.code, voucher.limit, used, voucher.limit - used],],
+    ))
+
+    # Redeemed Vouchers
+    reports.append(AttendeeListReport(
+        "Redeemed",
+        ["User ID", "Name", "Email"],
+        users_redeemed,
+        link_view=attendee,
+    ))
+
+    # Pending Vouchers
+    reports.append(AttendeeListReport(
+        "Pending: Voucher applied to cart but not Paid!",
+        ["User ID", "Name", "Email"],
+        users_pending,
+        link_view=attendee,
+    ))
+
+    return reports

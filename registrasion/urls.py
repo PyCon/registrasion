@@ -80,7 +80,8 @@ reports = [
         rv.speaker_registrations,
         name="speaker_registrations",
     ),
-    url(r"^vouchers/?$", rv.vouchers, name="vouchers")
+    url(r"^vouchers/?$", rv.voucher, name="voucher"),
+    url(r"^vouchers/([0-9]*)$", rv.voucher, name="voucher"),
 ]
 
 
