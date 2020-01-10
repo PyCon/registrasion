@@ -515,6 +515,7 @@ def product_category(request, category_id):
 
 
 @waffle_flag('registration_open')
+@login_required
 def voucher_code(request):
     ''' A view *just* for entering a voucher form. '''
 
