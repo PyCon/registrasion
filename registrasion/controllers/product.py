@@ -56,6 +56,46 @@ class ProductController(object):
         return out
 
     @classmethod
+    def sold_out_products(cls, user, category=None, products=None):
+        ''' Returns a list of all of the products that are available per
+        flag conditions from the given categories... but sold out '''
+        if category is None and products is None:
+            raise ValueError("You must provide products or a category")
+
+        if category is not None:
+            all_products = inventory.Product.objects.filter(category=category)
+            all_products = all_products.select_related("category")
+        else:
+            all_products = []
+
+        if products is not None:
+            all_products = set(itertools.chain(all_products, products))
+
+        category_remainders = CategoryController.user_remainders(user)
+        product_remainders = ProductController.user_remainders(user)
+
+        passed_limits = set(
+            product
+            for product in all_products
+            if category_remainders[product.category.id] > 0
+            if product_remainders[product.id] > 0
+        )
+
+        failed_and_messages = FlagController.test_flags(
+            user, products=passed_limits
+        )
+        failed_conditions = set()
+        for product, message in failed_and_messages:
+            time_or_stock_flags = product.flagbase_set.select_subclasses().exclude(timeorstocklimitflag__isnull=True).all()
+            if any([bool(x.limit) for x in time_or_stock_flags]):
+                failed_conditions.add(product)
+
+        out = list(passed_limits.intersection(failed_conditions))
+        out.sort(key=lambda product: product.order)
+
+        return out
+
+    @classmethod
     @BatchController.memoise
     def user_remainders(cls, user):
         '''

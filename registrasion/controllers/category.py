@@ -43,6 +43,27 @@ class CategoryController(object):
         return sorted(set(i.category for i in available), key=attrgetter("order"))
 
     @classmethod
+    def sold_out_categories(cls, user, products=AllProducts):
+        ''' Returns the categories available to the user... but sold out.
+        Specify `products` if you want to restrict to just the categories
+        that hold the specified products, otherwise it'll do all. '''
+
+        # STOPGAP -- this needs to be elsewhere tbqh
+        from .product import ProductController
+
+        if products is AllProducts:
+            products = inventory.Product.objects.all().select_related(
+                "category",
+            )
+
+        sold_out = ProductController.sold_out_products(
+            user,
+            products=products,
+        )
+
+        return sorted(set(i.category for i in sold_out), key=attrgetter("order"))
+
+    @classmethod
     @BatchController.memoise
     def user_remainders(cls, user):
         '''

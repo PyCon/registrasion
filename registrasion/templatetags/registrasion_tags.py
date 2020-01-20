@@ -23,7 +23,7 @@ def user_for_context(context):
 
 @register.simple_tag(takes_context=True)
 def available_categories(context):
-    ''' Gets all of the currently available products.
+    ''' Gets all of the currently available categories.
 
     Returns:
         [models.inventory.Category, ...]: A list of all of the categories that
@@ -31,6 +31,18 @@ def available_categories(context):
 
     '''
     return CategoryController.available_categories(user_for_context(context))
+
+
+@register.simple_tag(takes_context=True)
+def sold_out_categories(context):
+    ''' Gets all of the currently sold out categories.
+
+    Returns:
+        [models.inventory.Category, ...]: A list of all of the categories that
+            have Products that the current user should see as sold out.
+
+    '''
+    return CategoryController.sold_out_categories(user_for_context(context))
 
 
 @register.simple_tag(takes_context=True)
@@ -207,6 +219,10 @@ def include_if_exists(parser, token):
 def addstr(arg1, arg2):
     """concatenate arg1 & arg2"""
     return str(arg1) + str(arg2)
+
+@register.filter
+def issubset(obj1, obj2):
+    return set(obj1).issubset(set(obj2))
 
 
 @register.simple_tag(takes_context=True)

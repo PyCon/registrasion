@@ -130,7 +130,7 @@ class ManualPaymentForm(forms.ModelForm):
 # and the fields added as needs be. ProductsForm (the function) is responsible
 # for the subclassing.
 
-def ProductsForm(category, products):
+def ProductsForm(category, products, sold_out_products=None):
     ''' Produces an appropriate _ProductsForm subclass for the given render
     type. '''
 
@@ -158,8 +158,13 @@ def ProductsForm(category, products):
 
     products = list(products)
     products.sort(key=lambda prod: prod.order)
+    if sold_out_products is None:
+        sold_out_products = []
+    else:
+        sold_out_products = list(sold_out_products)
+        sold_out_products.sort(key=lambda prod: prod.order)
 
-    ProductsForm.set_fields(category, products)
+    ProductsForm.set_fields(category, products, sold_out_products)
 
     if category.render_type == inventory.Category.RENDER_TYPE_ITEM_QUANTITY:
         ProductsForm = forms.formset_factory(
@@ -237,7 +242,7 @@ class _QuantityBoxProductsForm(_ProductsForm):
     of desired products. '''
 
     @classmethod
-    def set_fields(cls, category, products):
+    def set_fields(cls, category, products, sold_out_products):
         for product in products:
             if product.description:
                 if product.display_price:
@@ -269,6 +274,13 @@ class _QuantityBoxProductsForm(_ProductsForm):
                     css_class=category.product_css_class if category.product_css_class else "",
                 )
             )
+        if len(sold_out_products) > 0:
+            html = "<h3>Sold Out:</h3>\n"
+            html += "<ul>\n"
+            for product in sold_out_products:
+                html += f"<li>{product.name}</li>\n"
+            html += "</ul>"
+            layout_objects.append(Div(HTML(html)))
         cls.helper.layout = Layout(
             Div(
                 *layout_objects,
@@ -298,7 +310,7 @@ class _RadioButtonProductsForm(_ProductsForm):
     FIELD = "chosen_product"
 
     @classmethod
-    def set_fields(cls, category, products):
+    def set_fields(cls, category, products, sold_out_products):
         choices = []
         for product in products:
             if product.display_price:
@@ -325,6 +337,13 @@ class _RadioButtonProductsForm(_ProductsForm):
                 css_class=category.product_css_class if category.product_css_class else "",
             )
         )
+        if len(sold_out_products) > 0:
+            html = "<h3>Sold Out:</h3>\n"
+            html += "<ul>\n"
+            for product in sold_out_products:
+                html += f"<li>{product.name}</li>\n"
+            html += "</ul>"
+            layout_objects.append(Div(HTML(html)))
         cls.helper.layout = Layout(
             Div(
                 *layout_objects,
@@ -368,7 +387,7 @@ class _CheckboxProductsForm(_ProductsForm):
     is either zero or one.'''
 
     @classmethod
-    def set_fields(cls, category, products):
+    def set_fields(cls, category, products, sold_out_products):
         for product in products:
             field = forms.BooleanField(
                 label='%s -- %s' % (product.name, product.price),
@@ -549,7 +568,7 @@ class _ChildcareProductsForm(_ProductsForm):
         super(_ChildcareProductsForm, self).__init__(*args, **kwargs)
 
     @classmethod
-    def set_fields(cls, category, products):
+    def set_fields(cls, category, products, sold_out_products):
         for i, product in enumerate(products):
             cls.PRODUCT_ID = product.id
             cls.PRODUCT_PRICE = product.price
@@ -705,7 +724,7 @@ class _YoungCodersProductsForm(_ProductsForm):
         super(_YoungCodersProductsForm, self).__init__(*args, **kwargs)
 
     @classmethod
-    def set_fields(cls, category, products):
+    def set_fields(cls, category, products, sold_out_products):
         for i, product in enumerate(products):
             cls.PRODUCT_ID = product.id
 
@@ -754,7 +773,7 @@ class _PayWhatYouWantProductsForm(_ProductsForm):
     amount for products. '''
 
     @classmethod
-    def set_fields(cls, category, products):
+    def set_fields(cls, category, products, sold_out_products):
         for product in products:
             if product.description:
                 help_text = "Enter a donation amount in USD -- %s" % (
@@ -811,7 +830,7 @@ class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
     amount and quantity for products. '''
 
     @classmethod
-    def set_fields(cls, category, products):
+    def set_fields(cls, category, products, sold_out_products):
         for product in products:
             if product.description:
                 help_text = "Enter a donation amount (per item) in USD -- %s" % (
@@ -888,7 +907,7 @@ class _PayWhatYouWantWithQuantityProductsForm(_ProductsForm):
 
 class _CheckboxForLimitOneProductsForm(_ProductsForm):
     @classmethod
-    def set_fields(cls, category, products):
+    def set_fields(cls, category, products, sold_out_products):
         for product in products:
             if product.limit_per_user == 1:
                 if product.price == 0.00:
@@ -929,6 +948,13 @@ class _CheckboxForLimitOneProductsForm(_ProductsForm):
                     css_class=category.product_css_class if category.product_css_class else "",
                 )
             )
+        if len(sold_out_products) > 0:
+            html = "<h3>Sold Out:</h3>\n"
+            html += "<ul>\n"
+            for product in sold_out_products:
+                html += f"<li>{product.name}</li>\n"
+            html += "</ul>"
+            layout_objects.append(Div(HTML(html)))
         cls.helper.layout = Layout(
             Div(
                 *layout_objects,
@@ -964,7 +990,7 @@ class _ItemQuantityProductsForm(_ProductsForm):
     QUANTITY_FIELD = "quantity"
 
     @classmethod
-    def set_fields(cls, category, products):
+    def set_fields(cls, category, products, sold_out_products):
         choices = []
 
         if not category.required:
@@ -1029,7 +1055,7 @@ class _ItemQuantityProductsFormSet(_HasProductsFields, forms.BaseFormSet):
     required_css_class = 'label-required'
 
     @classmethod
-    def set_fields(cls, category, products):
+    def set_fields(cls, category, products, sold_out_products):
         raise ValueError("set_fields must be called on the underlying Form")
 
     @classmethod
