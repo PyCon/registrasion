@@ -86,8 +86,12 @@ class ProductController(object):
         )
         failed_conditions = set()
         for product, message in failed_and_messages:
-            time_or_stock_flags = product.flagbase_set.select_subclasses().exclude(timeorstocklimitflag__isnull=True).all()
-            if any([bool(x.limit) for x in time_or_stock_flags]):
+            product_time_or_stock_flags = product.flagbase_set.select_subclasses().exclude(timeorstocklimitflag__isnull=True).all()
+            category_time_or_stock_flags = product.category.flagbase_set.select_subclasses().exclude(timeorstocklimitflag__isnull=True).all()
+            if (
+                any([bool(x.limit) for x in product_time_or_stock_flags]) or
+                any([bool(x.limit) for x in category_time_or_stock_flags])
+            ):
                 failed_conditions.add(product)
 
         out = list(passed_limits.intersection(failed_conditions))
