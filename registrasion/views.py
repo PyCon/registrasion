@@ -271,11 +271,14 @@ def _guided_registration_products(request, mode):
             request.user,
             products=all_products,
         ))
+        available_categories = set()
+        for product in available_products:
+            available_categories.add(product.category)
 
-        available_but_sold_out_products = set(ProductController.sold_out_products(
+        available_but_sold_out_products = set(p for p in ProductController.sold_out_products(
             request.user,
             products=all_products,
-        ))
+        ) if p.category in available_categories)
 
         # Check for conditions where we may hide all but one ticket type.
         if mode == GUIDED_MODE_TICKETS_ONLY:
