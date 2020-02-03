@@ -5,6 +5,8 @@ from django.contrib.postgres.fields import JSONField
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
+from symposion.schedule.models import Presentation
+
 
 # Inventory Models
 
@@ -81,6 +83,7 @@ class Category(models.Model):
     RENDER_TYPE_PWYW_QUANTITY = 7
     RENDER_TYPE_CHILDCARE = 8
     RENDER_TYPE_YOUNGCODERS = 9
+    RENDER_TYPE_PRESENTATION = 10
 
     CATEGORY_RENDER_TYPES = [
         (RENDER_TYPE_RADIO, _("Radio button")),
@@ -92,6 +95,7 @@ class Category(models.Model):
         (RENDER_TYPE_CHECKBOX_QUANTITY, _("Checkbox/Quantity Hybrid")),
         (RENDER_TYPE_CHILDCARE, _("Childcare with additional info")),
         (RENDER_TYPE_YOUNGCODERS, _("YoungCoders with additional info")),
+        (RENDER_TYPE_PRESENTATION, _("Presentation")),
     ]
 
     name = models.CharField(
@@ -228,6 +232,13 @@ class Product(models.Model):
 
     is_donation = models.BooleanField(
         default=False,
+    )
+
+    presentation = models.ForeignKey(
+        Presentation,
+        verbose_name=_("Associated Presentation"),
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
     )
 
 

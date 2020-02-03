@@ -18,6 +18,7 @@ class EffectsDisplayMixin(object):
 
 class ProductInline(admin.TabularInline):
     model = inventory.Product
+    raw_id_fields = ["presentation"]
 
 
 @admin.register(inventory.Category)
