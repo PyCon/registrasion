@@ -12,6 +12,7 @@ from registrasion.models import inventory
 from .batch import BatchController
 from .category import CategoryController
 from .flag import FlagController
+from .item import ItemController
 
 
 class ProductController(object):
@@ -98,6 +99,13 @@ class ProductController(object):
         out.sort(key=lambda product: product.order)
 
         return out
+
+    @classmethod
+    def disabled_products(cls, user, category=None, products=None):
+        conflicting_products = inventory.Product.objects.exclude(presentation__isnull=True)
+        purchased_products = [pq.product for pq in ItemController(user).items_pending_or_purchased() if pq.product.presentation is not None]
+        user_sessions = set(p.presentation.slot.start_datetime for p in purchased_products)
+        return [conflicting_product for conflicting_product in conflicting_products if conflicting_product.presentation.slot.start_datetime in user_sessions]
 
     @classmethod
     @BatchController.memoise

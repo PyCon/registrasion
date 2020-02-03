@@ -280,6 +280,11 @@ def _guided_registration_products(request, mode):
             products=all_products,
         ) if p.category in available_categories)
 
+        disabled_products = set(ProductController.disabled_products(
+            request.user,
+            products=all_products,
+        ))
+
         # Check for conditions where we may hide all but one ticket type.
         if mode == GUIDED_MODE_TICKETS_ONLY:
             filtered_products = []
@@ -306,9 +311,13 @@ def _guided_registration_products(request, mode):
                 i for i in available_but_sold_out_products
                 if i.category == category
             ]
+            disabled_products = [
+                i for i in disabled_products
+                if i.category == category
+            ]
 
             prefix = "category_" + str(category.id)
-            p = _handle_products(request, category, products, sold_out_products, prefix)
+            p = _handle_products(request, category, products, sold_out_products, disabled_products, prefix)
             products_form, discounts, products_handled = p
 
             section = GuidedRegistrationSection(
@@ -487,6 +496,11 @@ def product_category(request, category_id):
             category=category,
         )
 
+        disabled_products = ProductController.disabled_products(
+            request.user,
+            category=category,
+        )
+
         if category_id == settings.TICKET_PRODUCT_CATEGORY:
             filtered_products = []
             for product in products:
@@ -508,7 +522,7 @@ def product_category(request, category_id):
             )
             return redirect("dashboard")
 
-        p = _handle_products(request, category, products, sold_out_products, PRODUCTS_FORM_PREFIX)
+        p = _handle_products(request, category, products, sold_out_products, disabled_products, PRODUCTS_FORM_PREFIX)
         products_form, discounts, products_handled = p
 
     if request.POST and not voucher_handled and not products_form.contains_errors:
@@ -555,14 +569,14 @@ def voucher_code(request):
 
 
 
-def _handle_products(request, category, products, sold_out_products, prefix):
+def _handle_products(request, category, products, sold_out_products, disabled_products, prefix):
     ''' Handles a products list form in the given request. Returns the
     form instance, the discounts applicable to this form, and whether the
     contents were handled. '''
 
     current_cart = CartController.for_user(request.user)
 
-    ProductsForm = forms.ProductsForm(category, products, sold_out_products)
+    ProductsForm = forms.ProductsForm(category, products, sold_out_products, disabled_products)
 
     # Create initial data for each of products in category
     items = commerce.ProductItem.objects.filter(
