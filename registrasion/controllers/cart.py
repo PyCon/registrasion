@@ -265,6 +265,14 @@ class CartController(object):
             product_quantities=product_quantities,
         )
 
+        # Test for presentation collisions
+        disabled_products = ProductController.disabled_products(self.cart.user)
+        for product, quantity in product_quantities:
+            if quantity > 0 and product in disabled_products['purchased']:
+                errors.append((product, f'You have already purchased an event at that time'))
+            if quantity > 0 and product in disabled_products['pending']:
+                errors.append((product, f'You have already selected an event at that time'))
+
         if errs:
             for error in errs:
                 errors.append(error)

@@ -108,8 +108,8 @@ class ProductController(object):
         purchased_sessions = set(p.presentation.slot.start_datetime for p in purchased_products)
         pending_sessions = set(p.presentation.slot.start_datetime for p in pending_products)
         return {
-            'purchased': [conflicting_product for conflicting_product in conflicting_products if conflicting_product.presentation.slot.start_datetime in purchased_sessions],
-            'pending': [conflicting_product for conflicting_product in conflicting_products if conflicting_product.presentation.slot.start_datetime in pending_sessions],
+            'purchased': [p for p in conflicting_products if p.presentation.slot.start_datetime in purchased_sessions and p not in purchased_products],
+            'pending': [p for p in conflicting_products if p.presentation.slot.start_datetime in pending_sessions and p not in pending_products],
         }
 
     @classmethod

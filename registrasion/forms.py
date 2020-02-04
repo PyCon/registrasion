@@ -1185,7 +1185,7 @@ class _PresentationProductsForm(_ProductsForm):
                     session_objects.append(
                         Div(
                             HTML(f"<h3>{session.strftime('%I:%M %p')}</h3>"),
-                            HTML("<p><b>You have already paid for an event at this time</b></p>"),
+                            HTML("<p><b>You have already paid for an event at this time, to change your selection you must cancel that event by contacting <a href=\"mailto:pycon-reg@python.org\">pycon-reg@python.org</a>.</b></p>"),
                             Div(
                                 *product_objects,
                                 css_class=f"session session-{day}T{session.strftime('%H-%M')}"
@@ -1196,7 +1196,7 @@ class _PresentationProductsForm(_ProductsForm):
                     session_objects.append(
                         Div(
                             HTML(f"<h3>{session.strftime('%I:%M %p')}</h3>"),
-                            HTML("<p><b>You have already selected an event at this time</b></p>"),
+                            HTML("<p><b>You have already selected an event at this time, to change your selection you must remove the currently selected event first.</b></p>"),
                             Div(
                                 *product_objects,
                                 css_class=f"session session-{day}T{session.strftime('%H-%M')}"
@@ -1234,6 +1234,20 @@ class _PresentationProductsForm(_ProductsForm):
             initial[cls.field_name(product)] = bool(quantity)
 
         return initial
+
+    def clean(self):
+        cleaned_data = super(_PresentationProductsForm, self).clean()
+
+        session_slots = set()
+        for name, value in cleaned_data.copy().items():
+            if name.startswith(self.PRODUCT_PREFIX) and int(value) == 1:
+                product_id = int(name[len(self.PRODUCT_PREFIX):])
+                slot = inventory.Product.objects.get(pk=product_id).presentation.slot.start_datetime
+                if slot in session_slots:
+                    self.add_error(name, 'Only one session may be selected per slot')
+                session_slots.add(slot)
+
+        return cleaned_data
 
     def product_quantities(self):
         for name, value in self.cleaned_data.items():
