@@ -1,3 +1,5 @@
+import collections
+
 from .controllers.product import ProductController
 from .models import commerce
 from .models import inventory
@@ -146,6 +148,7 @@ def ProductsForm(category, products, sold_out_products=None, disabled_products=N
         cat.RENDER_TYPE_CHECKBOX_QUANTITY: _CheckboxForLimitOneProductsForm,
         cat.RENDER_TYPE_CHILDCARE: _ChildcareProductsForm,
         cat.RENDER_TYPE_YOUNGCODERS: _YoungCodersProductsForm,
+        cat.RENDER_TYPE_PRESENTATION: _PresentationProductsForm,
     }
 
     # Produce a subclass of _ProductsForm which we can alter the base_fields on
@@ -165,10 +168,7 @@ def ProductsForm(category, products, sold_out_products=None, disabled_products=N
         sold_out_products.sort(key=lambda prod: prod.order)
 
     if disabled_products is None:
-        disabled_products = []
-    else:
-        disabled_products = list(disabled_products)
-        disabled_products.sort(key=lambda prod: prod.order)
+        disabled_products = {}
 
     ProductsForm.set_fields(category, products, sold_out_products, disabled_products)
 
@@ -1122,6 +1122,124 @@ class _ItemQuantityProductsFormSet(_HasProductsFields, forms.BaseFormSet):
             return []
         else:
             return _errors
+
+
+class _PresentationProductsForm(_ProductsForm):
+    ''' Products entry form that allows users to say yes or no
+    to desired products. Basically, it's a quantity form, but the quantity
+    is either zero or one.'''
+
+    @classmethod
+    def set_fields(cls, category, products, sold_out_products, disabled_products):
+        dates = set()
+        sessions = set()
+        products_by_date_by_session = collections.defaultdict(lambda: collections.defaultdict(list))
+        for product in products:
+            presentation_datetime = product.presentation.slot.start_datetime
+            dates.add(presentation_datetime.date())
+            sessions.add(presentation_datetime.time())
+            products_by_date_by_session[presentation_datetime.date()][presentation_datetime.time()].append(product)
+        sold_out_products_by_date_by_session = collections.defaultdict(lambda: collections.defaultdict(list))
+        for product in sold_out_products:
+            presentation_datetime = product.presentation.slot.start_datetime
+            dates.add(presentation_datetime.date())
+            sessions.add(presentation_datetime.time())
+            sold_out_products_by_date_by_session[presentation_datetime.date()][presentation_datetime.time()].append(product)
+        disabled_sessions = set((p.presentation.slot.start_datetime.date(), p.presentation.slot.start_datetime.time()) for p in disabled_products['purchased'])
+        pending_sessions = set((p.presentation.slot.start_datetime.date(), p.presentation.slot.start_datetime.time()) for p in disabled_products['pending'])
+
+        layout_objects = []
+        for day in sorted(dates):
+            session_objects = []
+            for session in sorted(sessions):
+                product_objects = []
+                for product in products_by_date_by_session[day][session]:
+                    if product in disabled_products['purchased']:
+                        product_objects.append(
+                            Div(
+                                HTML(f"<p>{product.presentation.title}</p>"),
+                                css_class=f"session-{day}T{session.strftime('%H-%M')} {category.product_css_class} disabled" if category.product_css_class else "session-{day}T{session.strftime('%H-%M')} disabled",
+                            )
+                        )
+                        continue
+                    field = forms.BooleanField(
+                        label='%s' % (product.presentation.title),
+                        required=False,
+                    )
+                    cls.base_fields[cls.field_name(product)] = field
+                    product_objects.append(
+                        Div(
+                            cls.field_name(product),
+                            #HTML(f'<p style="font-size: smaller"><i>{", ".join([str(s) for s in product.presentation.speakers()])}</i></p>'),
+                            css_class=f"session-{day}T{session.strftime('%H-%M')} {category.product_css_class}" if category.product_css_class else "session-{day}T{session.strftime('%H-%M')}",
+                        )
+                    )
+                for product in sold_out_products_by_date_by_session[day][session]:
+                    product_objects.append(
+                        Div(
+                            HTML(f"<p>Sold Out: {product.presentation.title}</p>"),
+                            css_class=f"session-{day}T{session.strftime('%H-%M')} {category.product_css_class} sold-out" if category.product_css_class else "session-{day}T{session.strftime('%H-%M')} sold-out",
+                        )
+                    )
+                if (day, session) in disabled_sessions:
+                    session_objects.append(
+                        Div(
+                            HTML(f"<h3>{session.strftime('%I:%M %p')}</h3>"),
+                            HTML("<p><b>You have already paid for an event at this time</b></p>"),
+                            Div(
+                                *product_objects,
+                                css_class=f"session session-{day}T{session.strftime('%H-%M')}"
+                            )
+                        )
+                    )
+                elif (day, session) in pending_sessions:
+                    session_objects.append(
+                        Div(
+                            HTML(f"<h3>{session.strftime('%I:%M %p')}</h3>"),
+                            HTML("<p><b>You have already selected an event at this time</b></p>"),
+                            Div(
+                                *product_objects,
+                                css_class=f"session session-{day}T{session.strftime('%H-%M')}"
+                            )
+                        )
+                    )
+                else:
+                    session_objects.append(
+                        Div(
+                            HTML(f"<h3>{session.strftime('%I:%M %p')}</h3>"),
+                            Div(
+                                *product_objects,
+                                css_class=f"session session-{day}T{session.strftime('%H-%M')}"
+                            )
+                        )
+                    )
+            layout_objects.append(
+                Div(
+                    HTML(f"<h2>{day.strftime('%A %B %d')}</h2>"),
+                    *session_objects
+                )
+            )
+
+        cls.helper.layout = Layout(
+            Div(
+                *layout_objects,
+                css_class=category.form_css_class if category.form_css_class else "",
+            )
+        )
+
+    @classmethod
+    def initial_data(cls, product_quantities):
+        initial = {}
+        for product, quantity, _, _ in product_quantities:
+            initial[cls.field_name(product)] = bool(quantity)
+
+        return initial
+
+    def product_quantities(self):
+        for name, value in self.cleaned_data.items():
+            if name.startswith(self.PRODUCT_PREFIX):
+                product_id = int(name[len(self.PRODUCT_PREFIX):])
+                yield (product_id, int(value), None, None)
 
 
 class VoucherForm(forms.Form):

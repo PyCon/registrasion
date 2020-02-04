@@ -103,9 +103,14 @@ class ProductController(object):
     @classmethod
     def disabled_products(cls, user, category=None, products=None):
         conflicting_products = inventory.Product.objects.exclude(presentation__isnull=True)
-        purchased_products = [pq.product for pq in ItemController(user).items_pending_or_purchased() if pq.product.presentation is not None]
-        user_sessions = set(p.presentation.slot.start_datetime for p in purchased_products)
-        return [conflicting_product for conflicting_product in conflicting_products if conflicting_product.presentation.slot.start_datetime in user_sessions]
+        purchased_products = [pq.product for pq in ItemController(user).items_purchased() if pq.product.presentation is not None]
+        pending_products = [pq.product for pq in ItemController(user).items_pending() if pq.product.presentation is not None]
+        purchased_sessions = set(p.presentation.slot.start_datetime for p in purchased_products)
+        pending_sessions = set(p.presentation.slot.start_datetime for p in pending_products)
+        return {
+            'purchased': [conflicting_product for conflicting_product in conflicting_products if conflicting_product.presentation.slot.start_datetime in purchased_sessions],
+            'pending': [conflicting_product for conflicting_product in conflicting_products if conflicting_product.presentation.slot.start_datetime in pending_sessions],
+        }
 
     @classmethod
     @BatchController.memoise

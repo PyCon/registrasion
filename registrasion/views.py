@@ -106,11 +106,19 @@ def guided_registration(request, page_number=None):
     PAGE_PROFILE = 1
     PAGE_TICKET = 2
     PAGE_PRODUCTS = 3
-    PAGE_PRODUCTS_MAX = 4
-    TOTAL_PAGES = 4
+    PAGE_TUTORIALS = 4
+    PAGE_WORKSHOPS = 5
+    PAGE_PRODUCTS_MAX = 6
+    TOTAL_PAGES = 6
 
     ticket_category = inventory.Category.objects.get(
         id=settings.TICKET_PRODUCT_CATEGORY
+    )
+    tutorials_category = inventory.Category.objects.get(
+        id=settings.TUTORIAL_PRODUCT_CATEGORY
+    )
+    workshops_category = inventory.Category.objects.get(
+        id=settings.WORKSHOP_PRODUCT_CATEGORY
     )
     cart = CartController.for_user(request.user)
 
@@ -182,13 +190,24 @@ def guided_registration(request, page_number=None):
             sections = _guided_registration_products(
                 request, GUIDED_MODE_ALL_ADDITIONAL
             )
+        elif page_number == PAGE_TUTORIALS:
+            title = "Tutorials"
+            sections = _guided_registration_products(
+                request, GUIDED_MODE_TUTORIALS
+            )
+        elif page_number == PAGE_WORKSHOPS:
+            title = "Sponsor Workshops"
+            sections = _guided_registration_products(
+                request, GUIDED_MODE_WORKSHOPS
+            )
         elif page_number == PAGE_PRODUCTS_MAX:
             # Items enabled by things on page 3 -- only shows things
             # that have not been marked as complete.
             title = "More additional items"
-            sections = _guided_registration_products(
-                request, GUIDED_MODE_EXCLUDE_COMPLETE
-            )
+            sections = []  # Force termination of flow due to tutorials/workshops as separate pages
+            #sections = _guided_registration_products(
+            #    request, GUIDED_MODE_EXCLUDE_COMPLETE
+            #)
 
         if not sections:
             # We've filled in every category
@@ -217,7 +236,9 @@ def guided_registration(request, page_number=None):
 
 GUIDED_MODE_TICKETS_ONLY = 2
 GUIDED_MODE_ALL_ADDITIONAL = 3
-GUIDED_MODE_EXCLUDE_COMPLETE = 4
+GUIDED_MODE_TUTORIALS = 4
+GUIDED_MODE_WORKSHOPS = 5
+GUIDED_MODE_EXCLUDE_COMPLETE = 6
 
 
 @login_required
@@ -252,7 +273,15 @@ def _guided_registration_products(request, mode):
     elif mode == GUIDED_MODE_TICKETS_ONLY:
         cats = cats.filter(id=settings.TICKET_PRODUCT_CATEGORY)
     elif mode == GUIDED_MODE_ALL_ADDITIONAL:
-        cats = cats.exclude(id=settings.TICKET_PRODUCT_CATEGORY)
+        cats = (
+            cats.exclude(id=settings.TICKET_PRODUCT_CATEGORY)
+                .exclude(id=settings.TUTORIAL_PRODUCT_CATEGORY)
+                .exclude(id=settings.WORKSHOP_PRODUCT_CATEGORY)
+        )
+    elif mode == GUIDED_MODE_TUTORIALS:
+        cats = cats.filter(id=settings.TUTORIAL_PRODUCT_CATEGORY)
+    elif mode == GUIDED_MODE_WORKSHOPS:
+        cats = cats.filter(id=settings.WORKSHOP_PRODUCT_CATEGORY)
     elif mode == GUIDED_MODE_EXCLUDE_COMPLETE:
         cats = cats.exclude(id=settings.TICKET_PRODUCT_CATEGORY)
         cats = cats.exclude(id__in=old_cats)

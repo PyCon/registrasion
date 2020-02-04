@@ -45,7 +45,9 @@ class Attendee(models.Model):
     def registration_allows_housing(self):
         ticket_category = Category.objects.get(pk=settings.TICKET_PRODUCT_CATEGORY)
         purchased_tickets = ItemController(self.user).items_purchased(category=ticket_category)
-        return(any(p.product.allow_housing for p in purchased_tickets))
+        tutorial_category = Category.objects.get(pk=settings.TUTORIAL_PRODUCT_CATEGORY)
+        purchased_tutorials = ItemController(self.user).items_purchased(category=tutorial_category)
+        return(any(p.product.allow_housing for p in purchased_tickets) or any(p.product.allow_housing for p in purchased_tutorials))
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     # Badge/profile is linked
