@@ -309,10 +309,10 @@ def _guided_registration_products(request, mode):
             products=all_products,
         ) if p.category in available_categories)
 
-        disabled_products = set(ProductController.disabled_products(
+        disabled_products = ProductController.disabled_products(
             request.user,
             products=all_products,
-        ))
+        )
 
         # Check for conditions where we may hide all but one ticket type.
         if mode == GUIDED_MODE_TICKETS_ONLY:
@@ -340,8 +340,12 @@ def _guided_registration_products(request, mode):
                 i for i in available_but_sold_out_products
                 if i.category == category
             ]
-            disabled_products = [
-                i for i in disabled_products
+            disabled_products['purchased'] = [
+                i for i in disabled_products['purchased']
+                if i.category == category
+            ]
+            disabled_products['pending'] = [
+                i for i in disabled_products['pending']
                 if i.category == category
             ]
 
