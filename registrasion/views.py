@@ -1126,7 +1126,7 @@ def amend_registration(request, user_id):
     items = commerce.ProductItem.objects.filter(
         cart=current_cart.cart,
     ).select_related("product")
-    initial = [{"product": i.product, "quantity": i.quantity} for i in items]
+    initial = [{"product": i.product, "quantity": i.quantity, "price_override": i.price_override} for i in items]
 
     line_items = commerce.LineItem.objects.filter(
         invoice__user_id=user.id, invoice__status=commerce.Invoice.STATUS_PAID, cancelled=False,
@@ -1153,7 +1153,7 @@ def amend_registration(request, user_id):
     if request.POST and formset.is_valid():
 
         pq = [
-            (f.cleaned_data["product"], f.cleaned_data["quantity"], None, None)
+            (f.cleaned_data["product"], f.cleaned_data["quantity"], f.cleaned_data["price_override"], None)
             for f in formset
             if "product" in f.cleaned_data and
             f.cleaned_data["product"] is not None

@@ -1304,6 +1304,11 @@ def staff_products_form_factory(user):
             min_value=0,
         )
 
+        price_override = forms.DecimalField(
+            min_value=0,
+            required=False,
+        )
+
     return StaffProductsForm
 
 
