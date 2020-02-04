@@ -1140,7 +1140,6 @@ def amend_registration(request, user_id):
     )
     helper = FormHelper()
     helper.form_tag = False
-    helper.add_input(Submit('submit', 'Submit', css_class="btn-primary"))
 
     for item, form in zip(items, formset):
         queryset = inventory.Product.objects.filter(id=item.product.id)
@@ -1188,6 +1187,7 @@ def amend_registration(request, user_id):
         "cancelled": ic.items_released(),
         "form": formset,
         "helper": helper,
+        "active_vouchers": current_cart.cart.vouchers.all(),
         "voucher_form": voucher_form,
     }
 
