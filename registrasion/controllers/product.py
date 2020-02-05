@@ -15,6 +15,9 @@ from .flag import FlagController
 from .item import ItemController
 
 
+def presentations_conflict(p0, p1):
+    return (p0.slot.start_datetime <= p1.slot.end_datetime) and (p0.slot.end_datetime >= p1.slot.start_datetime)
+
 class ProductController(object):
 
     def __init__(self, product):
@@ -105,11 +108,9 @@ class ProductController(object):
         conflicting_products = inventory.Product.objects.exclude(presentation__isnull=True)
         purchased_products = [pq.product for pq in ItemController(user).items_purchased() if pq.product.presentation is not None]
         pending_products = [pq.product for pq in ItemController(user).items_pending() if pq.product.presentation is not None]
-        purchased_sessions = set(p.presentation.slot.start_datetime for p in purchased_products)
-        pending_sessions = set(p.presentation.slot.start_datetime for p in pending_products)
         return {
-            'purchased': [p for p in conflicting_products if p.presentation.slot.start_datetime in purchased_sessions and p not in purchased_products],
-            'pending': [p for p in conflicting_products if p.presentation.slot.start_datetime in pending_sessions and p not in pending_products],
+            'purchased': [p for p in conflicting_products if any(presentations_conflict(p.presentation, x.presentation) for x in purchased_products) and p not in purchased_products],
+            'pending': [p for p in conflicting_products if any(presentations_conflict(p.presentation, x.presentation) for x in pending_products) and p not in pending_products],
         }
 
     @classmethod
