@@ -1157,7 +1157,8 @@ class _PresentationProductsForm(_ProductsForm):
                     if product in disabled_products['purchased']:
                         product_objects.append(
                             Div(
-                                HTML(f"<p>{product.presentation.title}</p>"),
+                                HTML(f"<p>{product.presentation.title}<br></p>"),
+                                HTML(f'<p style="text-align: center; margin-bottom: 0em; font-size: smaller"><i>{", ".join([str(s) for s in product.presentation.speakers()])}</i></p>'),
                                 css_class=f"session-{day}T{session.strftime('%H-%M')} {category.product_css_class} disabled" if category.product_css_class else "session-{day}T{session.strftime('%H-%M')} disabled",
                             )
                         )
@@ -1170,7 +1171,7 @@ class _PresentationProductsForm(_ProductsForm):
                     product_objects.append(
                         Div(
                             cls.field_name(product),
-                            #HTML(f'<p style="font-size: smaller"><i>{", ".join([str(s) for s in product.presentation.speakers()])}</i></p>'),
+                            HTML(f'<br><p style="text-align: center; margin-bottom: 0em; font-size: smaller"><i>{", ".join([str(s) for s in product.presentation.speakers()])}</i></p>'),
                             css_class=f"session-{day}T{session.strftime('%H-%M')} {category.product_css_class}" if category.product_css_class else "session-{day}T{session.strftime('%H-%M')}",
                         )
                     )
@@ -1178,6 +1179,7 @@ class _PresentationProductsForm(_ProductsForm):
                     product_objects.append(
                         Div(
                             HTML(f"<p>Sold Out: {product.presentation.title}</p>"),
+                            HTML(f'<p style="text-align: center; margin-bottom: 0em; font-size: smaller"><i>{", ".join([str(s) for s in product.presentation.speakers()])}</i></p>'),
                             css_class=f"session-{day}T{session.strftime('%H-%M')} {category.product_css_class} sold-out" if category.product_css_class else "session-{day}T{session.strftime('%H-%M')} sold-out",
                         )
                     )
