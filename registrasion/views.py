@@ -1215,25 +1215,26 @@ def cancel_line_items(request, user_id):
         line_items = commerce.LineItem.objects.filter(id__in=form.cleaned_data['line_items']).all()
         for line_item in line_items:
             line_item.cancelled = True
-            product_items = commerce.ProductItem.objects.filter(
-                cart__id=line_item.invoice.cart.id,
-                product__id=line_item.product.id,
-            )
-            if len(product_items) == 1:
-                product_item = product_items.first()
-                product_item.quantity -= line_item.quantity
-                product_item.save()
-            else:
-                for product_item in product_items.all():
-                    if product_item.additional_data == line_item.additional_data:
-                        product_item.quantity -= line_item.quantity
-                        product_item.save()
+            if line_item.product is not None:
+                product_items = commerce.ProductItem.objects.filter(
+                    cart__id=line_item.invoice.cart.id,
+                    product__id=line_item.product.id,
+                )
+                if len(product_items) == 1:
+                    product_item = product_items.first()
+                    product_item.quantity -= line_item.quantity
+                    product_item.save()
+                else:
+                    for product_item in product_items.all():
+                        if product_item.additional_data == line_item.additional_data:
+                            product_item.quantity -= line_item.quantity
+                            product_item.save()
             line_item.save()
             preamble = "Cancellation"
             if line_item.price > 0:
                 preamble = "Refund"
             amount = 0-line_item.price
-            if line_item.product.is_donation:
+            if line_item.product is not None and line_item.product.is_donation:
                 preamble = "Cancellation - Non-refundable"
                 amount = 0
             items.append((f'{preamble}: {line_item.description}', amount, line_item.quantity))
