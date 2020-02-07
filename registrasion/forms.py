@@ -1163,6 +1163,15 @@ class _PresentationProductsForm(_ProductsForm):
                             )
                         )
                         continue
+                    if product in disabled_products['pending']:
+                        product_objects.append(
+                            Div(
+                                HTML(f"<p>{product.presentation.title}<br></p>"),
+                                HTML(f'<p style="text-align: center; margin-bottom: 0em; font-size: smaller"><i>{", ".join([str(s) for s in product.presentation.speakers()])}</i></p>'),
+                                css_class=f"session-{day}T{session.strftime('%H-%M')} {category.product_css_class} disabled" if category.product_css_class else "session-{day}T{session.strftime('%H-%M')} disabled",
+                            )
+                        )
+                        continue
                     field = forms.BooleanField(
                         label='%s' % (product.presentation.title),
                         required=False,
