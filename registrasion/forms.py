@@ -81,6 +81,23 @@ class CancelLineItemsForm(forms.Form):
     cancellation_fee = forms.DecimalField()
 
 
+class TransferRegistrationForm(forms.Form):
+
+    required_css_class = 'label-required'
+
+    def __init__(self, user_id, *a, **k):
+        super(TransferRegistrationForm, self).__init__(*a, **k)
+        self.helper = FormHelper()
+        self.helper.form_method = "POST"
+        self.helper.form_action = reverse("transfer_registration", args=[user_id])
+        self.helper.add_input(Submit('submit', 'Transfer Registration', css_class="btn-primary"))
+
+    attendee = forms.ChoiceField(
+        label="Attendee to transfer to",
+        widget=forms.Select,
+    )
+
+
 class CancellationFeeForm(forms.Form):
 
     required_css_class = 'label-required'

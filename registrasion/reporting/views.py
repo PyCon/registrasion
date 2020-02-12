@@ -518,6 +518,10 @@ def attendee(request, form, user_id=None):
         reverse(views.cancel_line_items, args=[user_id]),
         "Cancel line items",
     ))
+    links.append((
+        reverse(views.transfer_registration, args=[user_id]),
+        "Transfer registration",
+    ))
 
     reports.append(Links("Actions for " + name, links))
 

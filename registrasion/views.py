@@ -1252,6 +1252,67 @@ def cancel_line_items(request, user_id):
     return render(request, "registrasion/cancel_line_items.html", data)
 
 
+
+
+@user_passes_test(_staff_only)
+@transaction.atomic
+def transfer_registration(request, user_id):
+
+    user = User.objects.get(id=int(user_id))
+    attendees = people.Attendee.objects.filter(attendeeprofilebase__isnull=False).filter(completed_registration=False)
+
+    form = forms.TransferRegistrationForm(user_id, request.POST or None)
+    form.fields['attendee'].choices = [(None, "---------")] + sorted([(a.user.id, a) for a in attendees], key=lambda x: str(x[1]))
+
+    if request.POST and form.is_valid():
+        new_user_id = form.cleaned_data['attendee']
+        new_user = User.objects.get(id=int(new_user_id))
+        attendee = people.Attendee.objects.get(user=new_user)
+        carts = commerce.Cart.objects.filter(user=user)
+        invoices = commerce.Invoice.objects.filter(user=user)
+        last_invoice = invoices.order_by("-id").first()
+
+        existing_carts = commerce.Cart.objects.filter(user=new_user)
+        existing_invoices = commerce.Invoice.objects.filter(user=new_user)
+
+        if any([c.status == commerce.Cart.STATUS_PAID for c in existing_carts]):
+            form.add_error(None, "Cannot transfer to attendee with paid invoices or carts!")
+
+        if any([i.status in [commerce.Invoice.STATUS_PAID, commerce.Invoice.STATUS_REFUNDED] for i in existing_invoices]):
+            form.add_error(None, "Cannot transfer to attendee with paid invoices or carts!")
+
+        if form.errors:
+            pass
+        else:
+            existing_carts.delete()
+            existing_invoices.delete()
+
+            for invoice in invoices:
+                invoice.user = new_user
+                invoice.save()
+            for cart in carts:
+                cart.user = new_user
+                cart.save()
+
+            transfer_line_item = commerce.LineItem(
+                invoice=last_invoice,
+                description=f"Registration transferred from {user.email}",
+                quantity=1,
+                price=0,
+            )
+            transfer_line_item.save()
+            user.attendee.completed_registration = False
+            user.attendee.save()
+
+            return redirect("attendee", new_user_id)
+
+    data = {
+        "user": user,
+        "form": form,
+    }
+    return render(request, "registrasion/transfer_registration.html", data)
+
+
 @user_passes_test(_staff_only)
 def extend_reservation(request, user_id, days=7):
     ''' Allows staff to extend the reservation on a given user's cart.
