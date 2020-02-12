@@ -611,7 +611,7 @@ def attendee_list(request):
     )
 
     headings = [
-        "User ID", "Attendee ID", "Name", "Email", "Completed Registration",
+        "User ID", "Attendee ID", "User Name", "Profile Name", "Email", "Completed Registration"
     ]
 
     data = []
@@ -622,12 +622,14 @@ def attendee_list(request):
             a.id,
             (profiles_by_attendee[a].attendee_name()
                 if a in profiles_by_attendee else ""),
+            (f"{profiles_by_attendee[a].first_name} {profiles_by_attendee[a].last_name}"
+                if a in profiles_by_attendee else ""),
             a.user.email,
             a.has_registered > 0,
         ])
 
     # Sort by whether they've registered, then ID.
-    data.sort(key=lambda a: (-a[4], a[0]))
+    data.sort(key=lambda a: (-a[5], a[0]))
 
     return AttendeeListReport("Attendees", headings, data, link_view=attendee)
 
