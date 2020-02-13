@@ -1301,6 +1301,8 @@ def transfer_registration(request, user_id):
                 price=0,
             )
             transfer_line_item.save()
+            new_user.attendee.completed_registration = True
+            new_user.attendee.save()
             user.attendee.completed_registration = False
             user.attendee.save()
 
