@@ -263,15 +263,23 @@ def product_status(request, form):
     )
 
     headings = [
-        "Product", "Paid", "Reserved", "Unreserved", "Refunded",
+        "Product", "Limit", "Paid", "Reserved", "Unreserved", "Refunded",
     ]
     data = []
 
     for item in items:
+        product = inventory.Product.objects.get(id=item["product"])
+        product_time_or_stock_flags = product.flagbase_set.select_subclasses().exclude(timeorstocklimitflag__isnull=True).exclude(timeorstocklimitflag__limit__isnull=True).all()
+        if product_time_or_stock_flags:
+            limit = min([x.limit for x in product_time_or_stock_flags])
+        else:
+            limit = ""
+
         data.append([
             "%s - %s" % (
                 item["product__category__name"], item["product__name"]
             ),
+            limit,
             item["total_paid"],
             item["total_reserved"],
             item["total_unreserved"],
