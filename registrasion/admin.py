@@ -166,6 +166,7 @@ class VoucherAdmin(nested_admin.NestedModelAdmin):
 
     model = inventory.Voucher
     list_display = ("recipient", "code", "limit", "effects")
+    search_fields = ("recipient", "code")
     inlines = [
         VoucherDiscountInline,
         VoucherFlagInline,
