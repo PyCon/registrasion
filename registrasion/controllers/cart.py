@@ -151,7 +151,7 @@ class CartController(object):
         cart.save()
 
     @_modifies_cart
-    def set_quantities(self, product_quantities):
+    def set_quantities(self, product_quantities, enforce_limits=True):
         ''' Sets the quantities on each of the products on each of the
         products specified. Raises an exception (ValidationError) if a limit
         is violated. `product_quantities` is an iterable of (product, quantity)
@@ -172,17 +172,18 @@ class CartController(object):
             ((x[0], x[1]) for x in product_quantities),
         )).items()
 
-        # Validate that the limits we're adding are OK
-        products = set(product for product, q, po, ad in product_quantities)
-        try:
-            self._test_limits(all_product_quantities)
-        except CartValidationError as ve:
-            # Only raise errors for products that we're explicitly
-            # Manipulating here.
-            for ve_field in ve.error_list:
-                product, message = ve_field.message
-                if product in products:
-                    raise ve
+        if enforce_limits:
+            # Validate that the limits we're adding are OK
+            products = set(product for product, q, po, ad in product_quantities)
+            try:
+                self._test_limits(all_product_quantities)
+            except CartValidationError as ve:
+                # Only raise errors for products that we're explicitly
+                # Manipulating here.
+                for ve_field in ve.error_list:
+                    product, message = ve_field.message
+                    if product in products:
+                        raise ve
 
         new_items = []
         products = []
@@ -446,6 +447,14 @@ class CartController(object):
         not_available = products - available
         zeros = [(product, 0, 0, None) for product in not_available]
 
+        self.set_quantities(zeros)
+
+    @_modifies_cart
+    def empty_cart(self):
+        items = commerce.ProductItem.objects.filter(cart=self.cart)
+        items = items.select_related("product")
+        products = set(i.product for i in items)
+        zeros = [(product, 0, 0, None) for product in products]
         self.set_quantities(zeros)
 
     @transaction.atomic

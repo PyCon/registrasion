@@ -1346,6 +1346,29 @@ def staff_products_formset_factory(user):
     return forms.formset_factory(form_type)
 
 
+def substitute_products_form_factory(user):
+
+    products = inventory.Product.objects.all()
+    product_ids = [product.id for product in products]
+    product_set = inventory.Product.objects.filter(id__in=product_ids)
+
+    class SubstituteProductsForm(forms.Form):
+        line_item_id = forms.CharField(disabled=True)
+        quantity = forms.IntegerField(required=False)
+        product = forms.ModelChoiceField(
+            widget=forms.Select,
+            queryset=product_set,
+            required=False,
+        )
+        price = forms.DecimalField(disabled=True)
+
+    return SubstituteProductsForm
+
+def substitute_products_formset_factory(user):
+    form_type = substitute_products_form_factory(user)
+    return forms.formset_factory(form_type, extra=0)
+
+
 class InvoicesWithProductAndStatusForm(forms.Form):
 
     required_css_class = 'label-required'

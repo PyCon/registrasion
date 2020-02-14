@@ -28,7 +28,7 @@ class InvoiceController(ForId, object):
         self.update_validity()  # Make sure this invoice is up-to-date
 
     @classmethod
-    def for_cart(cls, cart):
+    def for_cart(cls, cart, additional_items=None, validate=True):
         ''' Returns an invoice object for a given cart at its current revision.
         If such an invoice does not exist, the cart is validated, and if valid,
         an invoice is generated.'''
@@ -43,10 +43,11 @@ class InvoiceController(ForId, object):
             )
         except ObjectDoesNotExist:
             cart_controller = CartController(cart)
-            cart_controller.validate_cart()  # Raises ValidationError on fail.
+            if validate:
+                cart_controller.validate_cart()  # Raises ValidationError on fail.
 
             cls.update_old_invoices(cart)
-            invoice = cls._generate_from_cart(cart)
+            invoice = cls._generate_from_cart(cart, additional_items=additional_items)
 
         return cls(invoice)
 
@@ -109,7 +110,7 @@ class InvoiceController(ForId, object):
 
     @classmethod
     @transaction.atomic
-    def _generate_from_cart(cls, cart):
+    def _generate_from_cart(cls, cart, additional_items=None):
         ''' Generates an invoice for the given cart. '''
 
         cart.refresh_from_db()
@@ -143,6 +144,17 @@ class InvoiceController(ForId, object):
             return "%s (%s)" % (description, format_product(product))
 
         line_items = []
+
+        if additional_items is not None:
+            for description, price, quantity in additional_items:
+                line_item = commerce.LineItem(
+                    description=description,
+                    quantity=quantity,
+                    price=Decimal(price),
+                    product=None,
+                    is_refund=(price <= 0),
+                )
+                line_items.append(line_item)
 
         for item in product_items:
             product = item.product

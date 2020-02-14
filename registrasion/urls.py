@@ -21,6 +21,7 @@ from .views import (
     product_category,
     refund,
     review,
+    substitute_products,
     transfer_registration,
     voucher_code,
 )
@@ -52,6 +53,7 @@ public = [
     url(r"^voucher$", voucher_code, name="voucher_code"),
     url(r"^register/([0-9]+)$", guided_registration,
         name="guided_registration"),
+    url(r"^substitute_products/([0-9]+)$", substitute_products, name="substitute_products"),
     url(r"^transfer_registration/([0-9]+)$", transfer_registration, name="transfer_registration"),
 ]
 
