@@ -1234,7 +1234,7 @@ def _cancel_line_items(line_items, cancellation_fee=0):
         amount = 0-discount.price
         items.append((f'{preamble}: {discount.description}', amount, discount.quantity))
     if cancellation_fee > 0:
-        items.append(("Cancellation Fee", form.cleaned_data['cancellation_fee'], 1))
+        items.append(("Cancellation Fee", cancellation_fee, 1))
     return items
 
 
