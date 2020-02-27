@@ -673,6 +673,8 @@ def attendee_data(request, form, user_id=None):
 
     items = commerce.ProductItem.objects.filter(
         Q(product__in=products) | Q(product__category__in=categories),
+    ).filter(
+        quantity__gt=0
     ).exclude(
         cart__status=commerce.Cart.STATUS_RELEASED
     ).select_related(
