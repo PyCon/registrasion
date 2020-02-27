@@ -523,6 +523,10 @@ def attendee(request, form, user_id=None):
         "Amend current cart",
     ))
     links.append((
+        reverse(views.substitute_products, args=[user_id]),
+        "Substitute products",
+    ))
+    links.append((
         reverse(views.cancel_line_items, args=[user_id]),
         "Cancel line items",
     ))

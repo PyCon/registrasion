@@ -1267,7 +1267,10 @@ def substitute_products(request, user_id):
                     items_to_cancel.append(line_item)
                 if line_item.product != form.cleaned_data["product"] and form.cleaned_data["product"] is not None:
                     items_to_cancel.append(line_item)
-                    products_to_add.append((form.cleaned_data["product"], form.cleaned_data["quantity"], None, None))
+                    price_override = None
+                    if form.cleaned_data["product"].is_donation:
+                        price_override = 0
+                    products_to_add.append((form.cleaned_data["product"], form.cleaned_data["quantity"], price_override, None))
         if items_to_cancel:
             cancelled_items = _cancel_line_items(items_to_cancel)
         else:
