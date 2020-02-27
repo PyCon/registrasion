@@ -296,6 +296,7 @@ class ReportView(object):
 
         # Create the HttpResponse object with the appropriate CSV header.
         response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="report.csv"'
 
         writer = csv.writer(response)
         writer.writerow(list(i for i in report.headings()))
