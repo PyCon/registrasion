@@ -254,7 +254,7 @@ def product_status(request, form):
 
     items = commerce.ProductItem.objects.filter(
         Q(product__in=products) | Q(product__category__in=categories),
-    ).select_related("cart", "product")
+    ).filter(quantity__gt=0).select_related("cart", "product")
 
     items = group_by_cart_status(
         items,
@@ -896,6 +896,8 @@ def manifest(request, form):
 
     items = commerce.ProductItem.objects.filter(
         cart__in=carts
+    ).filter(
+        quantity__gt=0
     ).select_related(
         "product",
         "product__category",
