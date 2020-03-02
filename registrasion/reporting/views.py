@@ -1042,6 +1042,9 @@ def registrations_and_cancellations(request, form):
     for li in commerce.LineItem.objects.filter(description__startswith="Refund: Conference Registration").select_related("invoice", "invoice__user"):
         key = li.invoice.issue_time.strftime('%Y-%m-%d')
         cancellations[key][li.invoice.user.id] += 1
+    for li in commerce.LineItem.objects.filter(product__category=1, product__allow_housing=True, invoice__status=3).select_related("invoice", "invoice__user"):
+        key = li.invoice.issue_time.strftime('%Y-%m-%d')
+        cancellations[key][li.invoice.user.id] += 1
 
     dates = sorted(set(registrations.keys()).union(set(cancellations.keys())))
 
