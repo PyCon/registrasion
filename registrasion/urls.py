@@ -79,6 +79,7 @@ reports = [
     ),
     url(r"^product_status/?$", rv.product_status, name="product_status"),
     url(r"^reconciliation/?$", rv.reconciliation, name="reconciliation"),
+    url(r"^registrations_and_cancellations/?$", rv.registrations_and_cancellations, name="registrations_and_cancellations"),
     url(
         r"^speaker_registrations/?$",
         rv.speaker_registrations,

@@ -1026,3 +1026,36 @@ def voucher(request, form, voucher_id=None):
     ))
 
     return reports
+
+@report_view("Registrations and Cancellations", form_type=None)
+def registrations_and_cancellations(request, form):
+
+    data = []
+
+    registrations = collections.defaultdict(lambda: collections.defaultdict(int))
+    cancellations = collections.defaultdict(lambda: collections.defaultdict(int))
+
+    for li in commerce.LineItem.objects.filter(product__category=1, product__allow_housing=True, invoice__status=2).select_related("invoice", "invoice__user"): 
+        key = li.invoice.issue_time.strftime('%Y-%m-%d')
+        registrations[key][li.invoice.user.id] += 1
+
+    for li in commerce.LineItem.objects.filter(description__startswith="Refund: Conference Registration").select_related("invoice", "invoice__user"):
+        key = li.invoice.issue_time.strftime('%Y-%m-%d')
+        cancellations[key][li.invoice.user.id] += 1
+
+    dates = sorted(set(registrations.keys()).union(set(cancellations.keys())))
+
+    for date in dates:
+        updates = set(registrations[date].keys()).intersection(set(cancellations[date].keys()))
+        day_registrations = sum([count for uid, count in registrations[date].items() if uid not in updates])
+        day_cancellations = sum([count for uid, count in cancellations[date].items() if uid not in updates])
+        day_updates = sum([count for uid, count in registrations[date].items() if uid in updates])
+        data.append([date, day_registrations, day_cancellations, day_updates])
+
+    return [
+        ListReport(
+            "Registrations and Cancellations",
+            ["Date", "Registrations", "Cancellations", "Updates"],
+            data
+        )
+    ]
