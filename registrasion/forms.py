@@ -637,9 +637,9 @@ class _ChildcareProductsForm(_ProductsForm):
                     f'Child: {item["child_first_name"]} {item["child_last_name"]} '
                     f' - Dates: {", ".join(item["dates"])}'
                 )
-                if len(item['dates']) == 3:
+                if len(item['dates']) == 4:
                     item['adhoc_discount'] = {
-                        'description': 'Childcare - 3rd Day Free',
+                        'description': 'Childcare - 4th Day Free',
                         'price': int(self.PRODUCT_PRICE),
                         'line_item_info': (
                             f'Child: {item["child_first_name"]} {item["child_last_name"]} '
