@@ -1198,10 +1198,13 @@ def amend_registration(request, user_id):
     return render(request, "registrasion/amend_registration.html", data)
 
 
-def _cancel_line_items(line_items, cancellation_fee=0):
+def _cancel_line_items(line_items, retain_discounts=False, cancellation_fee=0):
     items = []
+    discounts = set()
     for line_item in line_items:
-        discounts = commerce.LineItem.objects.filter(invoice=line_item.invoice, product=line_item.product, price__lt=0).all()
+        line_item_discount = commerce.LineItem.objects.filter(invoice=line_item.invoice, product=line_item.product, price__lt=0, is_refund=False, cancelled=False).all()
+        for discount in line_item_discount:
+            discounts.add(discount)
     for line_item in line_items:
         line_item.cancelled = True
         if line_item.product is not None:
@@ -1227,12 +1230,13 @@ def _cancel_line_items(line_items, cancellation_fee=0):
             preamble = "Cancellation - Non-refundable"
             amount = 0
         items.append((f'{preamble}: {line_item.description}', amount, line_item.quantity))
-    for discount in discounts:
-        discount.cancelled = True
-        discount.save()
-        preamble = "Discount removed"
-        amount = 0-discount.price
-        items.append((f'{preamble}: {discount.description}', amount, discount.quantity))
+    if not retain_discounts:
+        for discount in discounts:
+            discount.cancelled = True
+            discount.save()
+            preamble = "Discount removed"
+            amount = 0-discount.price
+            items.append((f'{preamble}: {discount.description}', amount, discount.quantity))
     if cancellation_fee > 0:
         items.append(("Cancellation Fee", cancellation_fee, 1))
     return items
@@ -1272,7 +1276,7 @@ def substitute_products(request, user_id):
                         price_override = 0
                     products_to_add.append((form.cleaned_data["product"], form.cleaned_data["quantity"], price_override, None))
         if items_to_cancel:
-            cancelled_items = _cancel_line_items(items_to_cancel)
+            cancelled_items = _cancel_line_items(items_to_cancel, retain_discounts=True)
         else:
             cancelled_items = []
         invoice = None
@@ -1281,6 +1285,7 @@ def substitute_products(request, user_id):
             cart.empty_cart()
             for p in products_to_add:
                 cart.set_quantities(products_to_add, enforce_limits=False)
+            commerce.DiscountItem.objects.filter(cart=cart.cart).delete()
             invoice = InvoiceController.for_cart(cart.cart, additional_items=cancelled_items, validate=False).invoice
         else:
             invoice = InvoiceController.manual_invoice(
