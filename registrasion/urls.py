@@ -71,6 +71,7 @@ reports = [
         name="product_line_items",
     ),
     url(r"^discount_status/?$", rv.discount_status, name="discount_status"),
+    url(r"^housing_report/?$", rv.housing_report, name="housing_report"),
     url(r"^invoices/?$", rv.invoices, name="invoices"),
     url(
         r"^paid_invoices_by_date/?$",

@@ -25,6 +25,8 @@ from registrasion import views
 
 from symposion.schedule import models as schedule_models
 
+from pycon.registration.models import HotelReservation
+
 from .reports import get_all_reports
 from .reports import Links
 from .reports import ListReport
@@ -1062,3 +1064,16 @@ def registrations_and_cancellations(request, form):
             data
         )
     ]
+
+
+@report_view("Housing Report", form_type=None)
+def housing_report(request, form):
+    ticket_category = inventory.Category.objects.get(id=settings.TICKET_PRODUCT_CATEGORY)
+    housing_records = []
+    for record in HotelReservation.objects.order_by('status', 'attendee_id').all():
+        registration = ItemController(record.attendee.user).items_purchased(category=ticket_category)
+        registered = False
+        if registration:
+            registered = True
+        housing_records.append([record.attendee.user.id, record.attendee, registered, record.status])
+    return [AttendeeListReport("Housing", ["User ID", 'attendee', 'registration', 'record'], housing_records, link_view=attendee)]
