@@ -1075,5 +1075,12 @@ def housing_report(request, form):
         registered = False
         if registration:
             registered = True
-        housing_records.append([record.attendee.user.id, record.attendee, registered, record.status])
-    return [AttendeeListReport("Housing", ["User ID", 'attendee', 'registration', 'record'], housing_records, link_view=attendee)]
+        housing_records.append([record.attendee.user.id, record.attendee, record.reservation_id, record.status, registered])
+    return [
+        AttendeeListReport(
+            "Housing",
+            ["User ID", 'Attendee', 'Hotel Reservation ID', "Reservation status", "Registered"],
+            housing_records,
+            link_view=attendee,
+        )
+    ]
