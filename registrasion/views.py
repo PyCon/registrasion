@@ -1367,14 +1367,20 @@ def cancel_and_refund(request, user_id):
     form = forms.CancelForm(user_id, request.POST or None)
 
     if request.POST and form.is_valid():
+        invoices = []
         credit_notes = []
         payments = []
         for group in groups:
             items = _cancel_line_items(group['line_items'], cancellation_fee=0)
             invoice = InvoiceController.manual_invoice(user, datetime.timedelta(), items)
-            InvoiceController(invoice).update_status()
+            invoices.append(invoice)
             for payment in group['stripe_payments']:
                 payments.append(payment)
+
+        for invoice in invoices:
+            InvoiceController(invoice).update_status()
+
+        for invoice in invoices:
             credit_note = commerce.CreditNote.objects.filter(invoice=invoice).first()
             if credit_note:
                 credit_notes.append(credit_note)
@@ -1382,6 +1388,7 @@ def cancel_and_refund(request, user_id):
         for credit_note, payment in zip(sorted(credit_notes, key=lambda cn: cn.amount, reverse=True), sorted(payments, key=lambda p: p.amount)):
             process_refund(CreditNoteController(credit_note), MockForm(payment))
 
+        messages.info(request, f"Registration for {user} cancelled and refunded.")
         return redirect("attendee", user.id)
 
     data = {
@@ -1389,7 +1396,7 @@ def cancel_and_refund(request, user_id):
         "groups": groups,
         "hotel_reservations": hotel_reservations,
         "form": form,
-        "processable": set([p.id for p in all_payments]) == set([p.id for p in all_stripe_payments]),
+        "processable": set([p.id for p in all_payments if p.amount > 0]) == set([p.id for p in all_stripe_payments if p.amount > 0]),
     }
     return render(request, "registrasion/cancel_and_refund.html", data)
 
