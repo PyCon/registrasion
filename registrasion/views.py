@@ -1327,6 +1327,69 @@ def cancel_line_items(request, user_id):
     }
     return render(request, "registrasion/cancel_line_items.html", data)
 
+from registripe.views import process_refund
+from registripe.models import StripePayment
+class MockForm(object):
+    def __init__(self, payment):
+        self.cleaned_data = {}
+        self.cleaned_data["payment"] = payment
+
+@user_passes_test(_staff_only)
+@transaction.atomic
+def cancel_and_refund(request, user_id):
+
+    user = User.objects.get(id=int(user_id))
+    groups = []
+    invoices = commerce.Invoice.objects.filter(
+        user=user, status=commerce.Invoice.STATUS_PAID
+    )
+    all_payments = []
+    all_stripe_payments = []
+    for invoice in invoices:
+        line_items = commerce.LineItem.objects.filter(
+            invoice=invoice, cancelled=False, is_refund=False, product__isnull=False, price__gte=0,
+        )
+        payments = commerce.PaymentBase.objects.filter(
+            invoice=invoice
+        )
+        for payment in payments:
+            all_payments.append(payment)
+        stripe_payments = StripePayment.objects.filter(
+            invoice=invoice
+        )
+        for payment in stripe_payments:
+            all_stripe_payments.append(payment)
+        if line_items:
+            groups.append({'invoice': invoice, 'line_items': line_items, 'payments': payments, 'stripe_payments': stripe_payments})
+
+    hotel_reservations = user.attendee.hotelreservation_set.filter(status__in=['new', 'accepted', 'request'])
+
+    form = forms.CancelForm(user_id, request.POST or None)
+
+    if request.POST and form.is_valid():
+        credit_notes = []
+        payments = []
+        for group in groups:
+            items = _cancel_line_items(group['line_items'], cancellation_fee=0)
+            invoice = InvoiceController.manual_invoice(user, datetime.timedelta(), items)
+            InvoiceController(invoice).update_status()
+            for payment in group['stripe_payments']:
+                payments.append(payment)
+            credit_note = commerce.CreditNote.objects.filter(invoice=invoice).first()
+            if credit_note:
+                credit_notes.append(credit_note)
+
+        for credit_note, payment in zip(sorted(credit_notes, key=lambda cn: cn.amount, reverse=True), sorted(payments, key=lambda p: p.amount)):
+            process_refund(CreditNoteController(credit_note), MockForm(payment))
+
+    data = {
+        "user": user,
+        "groups": groups,
+        "hotel_reservations": hotel_reservations,
+        "form": form,
+        "processable": set([p.id for p in all_payments]) == set([p.id for p in all_stripe_payments]),
+    }
+    return render(request, "registrasion/cancel_and_refund.html", data)
 
 
 

@@ -62,6 +62,15 @@ class ApplyCreditNoteForm(forms.Form):
     )
 
 
+class CancelForm(forms.Form):
+    def __init__(self, user_id, *a, **k):
+        super(CancelForm, self).__init__(*a, **k)
+        self.helper = FormHelper()
+        self.helper.form_method = "POST"
+        self.helper.form_action = reverse("cancel_and_refund", args=[user_id])
+        self.helper.add_input(Submit('submit', 'Cancel And Refund', css_class="btn-primary"))
+
+
 class CancelLineItemsForm(forms.Form):
 
     required_css_class = 'label-required'
