@@ -1382,6 +1382,8 @@ def cancel_and_refund(request, user_id):
         for credit_note, payment in zip(sorted(credit_notes, key=lambda cn: cn.amount, reverse=True), sorted(payments, key=lambda p: p.amount)):
             process_refund(CreditNoteController(credit_note), MockForm(payment))
 
+        return redirect("attendee", user.id)
+
     data = {
         "user": user,
         "groups": groups,
