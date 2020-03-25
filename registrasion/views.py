@@ -1211,6 +1211,7 @@ def _cancel_line_items(line_items, retain_discounts=False, cancellation_fee=0):
             product_items = commerce.ProductItem.objects.filter(
                 cart__id=line_item.invoice.cart.id,
                 product__id=line_item.product.id,
+                quantity__gt=0,
             )
             if len(product_items) == 1:
                 product_item = product_items.first()
