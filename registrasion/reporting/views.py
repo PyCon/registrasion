@@ -432,13 +432,13 @@ def credit_notes(request, form):
         "creditnoterefund",
         "creditnoteapplication",
         "invoice",
-        "invoice__user__attendee__attendeeprofilebase",
+        "invoice__user",
     )
 
     return QuerysetReport(
         "Credit Notes",
         ["id",
-         "invoice__user__attendee__attendeeprofilebase__invoice_recipient",
+         "invoice__user",
          "status", "value"],
         notes,
         headings=["id", "Owner", "Status", "Value"],
