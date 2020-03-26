@@ -77,7 +77,7 @@ class InvoiceController(ForId, object):
 
     @classmethod
     @transaction.atomic
-    def manual_invoice(cls, user, due_delta, description_price_quantity_tuples):
+    def manual_invoice(cls, user, due_delta, description_price_quantity_tuples, line_items=None, auto_apply_credit_notes=True):
         ''' Generates an invoice for arbitrary items, not held in a user's
         cart.
 
@@ -94,7 +94,8 @@ class InvoiceController(ForId, object):
             an Invoice.
         '''
 
-        line_items = []
+        if line_items is None:
+            line_items = []
         for description, price, quantity in description_price_quantity_tuples:
             line_item = commerce.LineItem(
                 description=description,
@@ -106,7 +107,7 @@ class InvoiceController(ForId, object):
             line_items.append(line_item)
 
         min_due_time = timezone.now() + due_delta
-        return cls._generate(user, None, min_due_time, line_items)
+        return cls._generate(user, None, min_due_time, line_items, auto_apply_credit_notes=auto_apply_credit_notes)
 
     @classmethod
     @transaction.atomic
@@ -196,7 +197,7 @@ class InvoiceController(ForId, object):
 
     @classmethod
     @transaction.atomic
-    def _generate(cls, user, cart, min_due_time, line_items):
+    def _generate(cls, user, cart, min_due_time, line_items, auto_apply_credit_notes=True):
 
         # Never generate a due time that is before the issue time
         issued = timezone.now()
@@ -227,7 +228,8 @@ class InvoiceController(ForId, object):
 
         commerce.LineItem.objects.bulk_create(line_items)
 
-        cls._apply_credit_notes(invoice)
+        if auto_apply_credit_notes:
+            cls._apply_credit_notes(invoice)
         #cls.email_on_invoice_creation(invoice)
 
         return invoice
