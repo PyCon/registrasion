@@ -2,7 +2,6 @@ import datetime
 
 from django.db import models
 from django.contrib.postgres.fields import JSONField
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from symposion.schedule.models import Presentation
@@ -10,7 +9,6 @@ from symposion.schedule.models import Presentation
 
 # Inventory Models
 
-@python_2_unicode_compatible
 class Category(models.Model):
     ''' Registration product categories, used as logical groupings for Products
     in registration forms.
@@ -137,7 +135,6 @@ class Category(models.Model):
     )
 
 
-@python_2_unicode_compatible
 class Product(models.Model):
     ''' Products make up the conference inventory.
 
@@ -242,7 +239,6 @@ class Product(models.Model):
     )
 
 
-@python_2_unicode_compatible
 class Voucher(models.Model):
     ''' Vouchers are used to enable Discounts or Flags for the people who hold
     the voucher code.

@@ -5,7 +5,6 @@ from . import inventory
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from model_utils.managers import InheritanceManager
 
@@ -118,7 +117,6 @@ class GroupMemberCondition(models.Model):
 
 # Discounts
 
-@python_2_unicode_compatible
 class DiscountBase(models.Model):
     ''' Base class for discounts. This class is subclassed with special
     attributes which are used to determine whether or not the given discount
@@ -151,7 +149,6 @@ class DiscountBase(models.Model):
         )
 
 
-@python_2_unicode_compatible
 class DiscountForProduct(models.Model):
     ''' Represents a discount on an individual product. Each Discount can
     contain multiple products and categories. Discounts can either be a
@@ -213,7 +210,6 @@ class DiscountForProduct(models.Model):
     quantity = models.PositiveIntegerField()
 
 
-@python_2_unicode_compatible
 class DiscountForCategory(models.Model):
     ''' Represents a discount for a category of products. Each discount can
     contain multiple products. Category discounts can only be a percentage.
@@ -356,7 +352,6 @@ class GroupMemberDiscount(GroupMemberCondition, DiscountBase):
 
 # Flags
 
-@python_2_unicode_compatible
 class FlagBase(models.Model):
     ''' This defines a condition which allows products or categories to
     be made visible, or be prevented from being visible.
@@ -461,7 +456,6 @@ class TimeOrStockLimitFlag(TimeOrStockLimitCondition, FlagBase):
         verbose_name_plural = _("flags (time/stock limit)")
 
 
-@python_2_unicode_compatible
 class ProductFlag(IncludedProductCondition, FlagBase):
     ''' The condition is met because a specific product is purchased.
 
@@ -479,7 +473,6 @@ class ProductFlag(IncludedProductCondition, FlagBase):
         return "Enabled by products: " + str(self.enabling_products.all())
 
 
-@python_2_unicode_compatible
 class CategoryFlag(FlagBase):
     ''' The condition is met because a product in a particular product is
     purchased.
@@ -505,7 +498,6 @@ class CategoryFlag(FlagBase):
     )
 
 
-@python_2_unicode_compatible
 class VoucherFlag(VoucherCondition, FlagBase):
     ''' The condition is met because a Voucher is present. This is for e.g.
     enabling sponsor tickets. '''

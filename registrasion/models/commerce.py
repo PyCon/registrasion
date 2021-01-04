@@ -7,7 +7,6 @@ from django.db import models
 from django.db.models import F, Q, Sum
 from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from model_utils.managers import InheritanceManager
 
@@ -16,7 +15,6 @@ User = get_user_model()
 
 # Commerce Models
 
-@python_2_unicode_compatible
 class Cart(models.Model):
     ''' Represents a set of product items that have been purchased, or are
     pending purchase. '''
@@ -67,7 +65,6 @@ class Cart(models.Model):
         )
 
 
-@python_2_unicode_compatible
 class ProductItem(models.Model):
     ''' Represents a product-quantity pair in a Cart. '''
 
@@ -86,7 +83,6 @@ class ProductItem(models.Model):
     additional_data = JSONField(null=True, blank=True)
 
 
-@python_2_unicode_compatible
 class DiscountItem(models.Model):
     ''' Represents a discount-product-quantity relation in a Cart. '''
 
@@ -104,7 +100,6 @@ class DiscountItem(models.Model):
     quantity = models.PositiveIntegerField()
 
 
-@python_2_unicode_compatible
 class Invoice(models.Model):
     ''' An invoice. Invoices can be automatically generated when checking out
     a Cart, in which case, it is attached to a given revision of a Cart.
@@ -211,7 +206,6 @@ class Invoice(models.Model):
     value = models.DecimalField(max_digits=8, decimal_places=2)
 
 
-@python_2_unicode_compatible
 class LineItem(models.Model):
     ''' Line items for an invoice. These are denormalised from the ProductItems
     and DiscountItems that belong to a cart (for consistency), but also allow
@@ -257,7 +251,6 @@ class LineItem(models.Model):
     cancelled = models.BooleanField(default=False)
 
 
-@python_2_unicode_compatible
 class PaymentBase(models.Model):
     ''' The base payment type for invoices. Payment apps should subclass this
     class to handle implementation-specific issues.
