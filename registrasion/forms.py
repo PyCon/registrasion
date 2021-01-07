@@ -3,8 +3,10 @@ import collections
 from .controllers.product import ProductController
 from .models import commerce
 from .models import inventory
+from . import util
 
 from django import forms
+from django.conf import settings
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -1292,11 +1294,10 @@ class _PresentationProductsForm(_ProductsForm):
                 product_id = int(name[len(self.PRODUCT_PREFIX):])
                 yield (product_id, int(value), None, None)
 
-
-class VoucherForm(forms.Form):
+class _VoucherForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
-        super(VoucherForm, self).__init__(*args, **kwargs)
+        super(_VoucherForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
@@ -1317,6 +1318,11 @@ class VoucherForm(forms.Form):
         help_text="If you have a voucher code, enter it here",
         required=False,
     )
+
+try:
+    VoucherForm = util.get_object_from_name(settings.VOUCHER_FORM)
+except:
+    VoucherForm = _VoucherForm
 
 
 def staff_products_form_factory(user):
