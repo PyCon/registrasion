@@ -1319,11 +1319,14 @@ class _VoucherForm(forms.Form):
         required=False,
     )
 
-try:
-    VoucherForm = util.get_object_from_name(settings.VOUCHER_FORM)
-except:
-    VoucherForm = _VoucherForm
+def get_form_class_from_settings(config_name, default):
+    import_path = getattr(settings, config_name, "")
+    try:
+        return util.get_object_from_name(import_path)
+    except:
+        return default
 
+VoucherForm = get_form_class_from_settings('VOUCHER_FORM', _VoucherForm)
 
 def staff_products_form_factory(user):
     ''' Creates a StaffProductsForm that restricts the available products to
