@@ -168,7 +168,7 @@ def ProductsForm(category, products, sold_out_products=None, disabled_products=N
     cat = inventory.Category
     RENDER_TYPES = {
         cat.RENDER_TYPE_QUANTITY: _QuantityBoxProductsForm,
-        cat.RENDER_TYPE_RADIO: _RadioButtonProductsForm,
+        cat.RENDER_TYPE_RADIO: get_form_class_from_settings('RADIO_BUTTON_PRODUCTS_FORM', _RadioButtonProductsForm),
         cat.RENDER_TYPE_ITEM_QUANTITY: _ItemQuantityProductsForm,
         cat.RENDER_TYPE_CHECKBOX: _CheckboxProductsForm,
         cat.RENDER_TYPE_PWYW: _PayWhatYouWantProductsForm,
@@ -378,6 +378,7 @@ class _RadioButtonProductsForm(_ProductsForm):
                 html += f"<li>{product.name}</li>\n"
             html += "</ul>"
             layout_objects.append(Div(HTML(html)))
+
         cls.helper.layout = Layout(
             Div(
                 *layout_objects,
