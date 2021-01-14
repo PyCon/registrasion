@@ -175,18 +175,26 @@ def ProductsForm(category, products, sold_out_products=None, disabled_products=N
     # Each Category.RENDER_TYPE value has a subclass here.
     cat = inventory.Category
     RENDER_TYPES = {
-        cat.RENDER_TYPE_QUANTITY: _QuantityBoxProductsForm,
+        cat.RENDER_TYPE_QUANTITY: get_form_class_from_settings(
+            "REGISTRASION_QUANTITY_BOX_PRODUCTS_FORM", _QuantityBoxProductsForm),
         cat.RENDER_TYPE_RADIO: get_form_class_from_settings(
-            'REGISTRASION_RADIO_BUTTON_PRODUCTS_FORM', _RadioButtonProductsForm
-        ),
-        cat.RENDER_TYPE_ITEM_QUANTITY: _ItemQuantityProductsForm,
-        cat.RENDER_TYPE_CHECKBOX: _CheckboxProductsForm,
-        cat.RENDER_TYPE_PWYW: _PayWhatYouWantProductsForm,
-        cat.RENDER_TYPE_PWYW_QUANTITY: _PayWhatYouWantWithQuantityProductsForm,
-        cat.RENDER_TYPE_CHECKBOX_QUANTITY: _CheckboxForLimitOneProductsForm,
-        cat.RENDER_TYPE_CHILDCARE: _ChildcareProductsForm,
-        cat.RENDER_TYPE_YOUNGCODERS: _YoungCodersProductsForm,
-        cat.RENDER_TYPE_PRESENTATION: _PresentationProductsForm,
+            "REGISTRASION_RADIO_BUTTON_PRODUCTS_FORM", _RadioButtonProductsForm),
+        cat.RENDER_TYPE_ITEM_QUANTITY: get_form_class_from_settings(
+            "REGISTRASION_ITEM_QUANTITY_PRODUCTS_FORM", _ItemQuantityProductsForm),
+        cat.RENDER_TYPE_CHECKBOX: get_form_class_from_settings(
+            "REGISTRASION_CHECKBOX_PRODUCTS_FORM", _CheckboxProductsForm),
+        cat.RENDER_TYPE_PWYW: get_form_class_from_settings(
+            "REGISTRASION_PAY_WHAT_YOU_WANT_PRODUCTS_FORM", _PayWhatYouWantProductsForm),
+        cat.RENDER_TYPE_PWYW_QUANTITY: get_form_class_from_settings(
+            "REGISTRASION_PAY_WHAT_YOU_WANT_WITH_QUANTITY_PRODUCTS_FORM", _PayWhatYouWantWithQuantityProductsForm),
+        cat.RENDER_TYPE_CHECKBOX_QUANTITY: get_form_class_from_settings(
+            "REGISTRASION_CHECKBOX_FOR_LIMIT_ONE_PRODUCTS_FORM", _CheckboxForLimitOneProductsForm),
+        cat.RENDER_TYPE_CHILDCARE: get_form_class_from_settings(
+            "REGISTRASION_CHILDCARE_PRODUCTS_FORM", _ChildcareProductsForm),
+        cat.RENDER_TYPE_YOUNGCODERS: get_form_class_from_settings(
+            "REGISTRASION_YOUNG_CODERS_PRODUCTS_FORM", _YoungCodersProductsForm),
+        cat.RENDER_TYPE_PRESENTATION: get_form_class_from_settings(
+            "REGISTRASION_PRESENTATION_PRODUCTS_FORM", _PresentationProductsForm),
     }
 
     # Produce a subclass of _ProductsForm which we can alter the base_fields on
