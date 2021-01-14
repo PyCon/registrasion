@@ -40,7 +40,7 @@ def CURRENCY():
     return models.DecimalField(decimal_places=2)
 
 
-AttendeeProfile = util.get_object_from_name(settings.ATTENDEE_PROFILE_MODEL)
+AttendeeProfile = util.get_object_from_name(settings.REGISTRASION_ATTENDEE_PROFILE_MODEL)
 
 
 @user_passes_test(views._staff_only)

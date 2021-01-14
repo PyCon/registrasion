@@ -176,7 +176,9 @@ def ProductsForm(category, products, sold_out_products=None, disabled_products=N
     cat = inventory.Category
     RENDER_TYPES = {
         cat.RENDER_TYPE_QUANTITY: _QuantityBoxProductsForm,
-        cat.RENDER_TYPE_RADIO: get_form_class_from_settings('RADIO_BUTTON_PRODUCTS_FORM', _RadioButtonProductsForm),
+        cat.RENDER_TYPE_RADIO: get_form_class_from_settings(
+            'REGISTRASION_RADIO_BUTTON_PRODUCTS_FORM', _RadioButtonProductsForm
+        ),
         cat.RENDER_TYPE_ITEM_QUANTITY: _ItemQuantityProductsForm,
         cat.RENDER_TYPE_CHECKBOX: _CheckboxProductsForm,
         cat.RENDER_TYPE_PWYW: _PayWhatYouWantProductsForm,
@@ -1328,7 +1330,7 @@ class _VoucherForm(forms.Form):
         required=False,
     )
 
-VoucherForm = get_form_class_from_settings('VOUCHER_FORM', _VoucherForm)
+VoucherForm = get_form_class_from_settings('REGISTRASION_VOUCHER_FORM', _VoucherForm)
 
 def staff_products_form_factory(user):
     ''' Creates a StaffProductsForm that restricts the available products to
