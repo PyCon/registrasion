@@ -15,6 +15,14 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import LayoutObject, Layout, Field, Fieldset, Div, HTML, ButtonHolder, Submit, TEMPLATE_PACK
 
 
+def get_form_class_from_settings(config_name, default):
+    import_path = getattr(settings, config_name, "")
+    try:
+        return util.get_object_from_name(import_path)
+    except:
+        return default
+
+
 class ApplyCreditNoteForm(forms.Form):
 
     required_css_class = 'label-required'
@@ -167,16 +175,26 @@ def ProductsForm(category, products, sold_out_products=None, disabled_products=N
     # Each Category.RENDER_TYPE value has a subclass here.
     cat = inventory.Category
     RENDER_TYPES = {
-        cat.RENDER_TYPE_QUANTITY: _QuantityBoxProductsForm,
-        cat.RENDER_TYPE_RADIO: _RadioButtonProductsForm,
-        cat.RENDER_TYPE_ITEM_QUANTITY: _ItemQuantityProductsForm,
-        cat.RENDER_TYPE_CHECKBOX: _CheckboxProductsForm,
-        cat.RENDER_TYPE_PWYW: _PayWhatYouWantProductsForm,
-        cat.RENDER_TYPE_PWYW_QUANTITY: _PayWhatYouWantWithQuantityProductsForm,
-        cat.RENDER_TYPE_CHECKBOX_QUANTITY: _CheckboxForLimitOneProductsForm,
-        cat.RENDER_TYPE_CHILDCARE: _ChildcareProductsForm,
-        cat.RENDER_TYPE_YOUNGCODERS: _YoungCodersProductsForm,
-        cat.RENDER_TYPE_PRESENTATION: _PresentationProductsForm,
+        cat.RENDER_TYPE_QUANTITY: get_form_class_from_settings(
+            "REGISTRASION_QUANTITY_BOX_PRODUCTS_FORM", _QuantityBoxProductsForm),
+        cat.RENDER_TYPE_RADIO: get_form_class_from_settings(
+            "REGISTRASION_RADIO_BUTTON_PRODUCTS_FORM", _RadioButtonProductsForm),
+        cat.RENDER_TYPE_ITEM_QUANTITY: get_form_class_from_settings(
+            "REGISTRASION_ITEM_QUANTITY_PRODUCTS_FORM", _ItemQuantityProductsForm),
+        cat.RENDER_TYPE_CHECKBOX: get_form_class_from_settings(
+            "REGISTRASION_CHECKBOX_PRODUCTS_FORM", _CheckboxProductsForm),
+        cat.RENDER_TYPE_PWYW: get_form_class_from_settings(
+            "REGISTRASION_PAY_WHAT_YOU_WANT_PRODUCTS_FORM", _PayWhatYouWantProductsForm),
+        cat.RENDER_TYPE_PWYW_QUANTITY: get_form_class_from_settings(
+            "REGISTRASION_PAY_WHAT_YOU_WANT_WITH_QUANTITY_PRODUCTS_FORM", _PayWhatYouWantWithQuantityProductsForm),
+        cat.RENDER_TYPE_CHECKBOX_QUANTITY: get_form_class_from_settings(
+            "REGISTRASION_CHECKBOX_FOR_LIMIT_ONE_PRODUCTS_FORM", _CheckboxForLimitOneProductsForm),
+        cat.RENDER_TYPE_CHILDCARE: get_form_class_from_settings(
+            "REGISTRASION_CHILDCARE_PRODUCTS_FORM", _ChildcareProductsForm),
+        cat.RENDER_TYPE_YOUNGCODERS: get_form_class_from_settings(
+            "REGISTRASION_YOUNG_CODERS_PRODUCTS_FORM", _YoungCodersProductsForm),
+        cat.RENDER_TYPE_PRESENTATION: get_form_class_from_settings(
+            "REGISTRASION_PRESENTATION_PRODUCTS_FORM", _PresentationProductsForm),
     }
 
     # Produce a subclass of _ProductsForm which we can alter the base_fields on
@@ -378,6 +396,7 @@ class _RadioButtonProductsForm(_ProductsForm):
                 html += f"<li>{product.name}</li>\n"
             html += "</ul>"
             layout_objects.append(Div(HTML(html)))
+
         cls.helper.layout = Layout(
             Div(
                 *layout_objects,
@@ -1319,11 +1338,7 @@ class _VoucherForm(forms.Form):
         required=False,
     )
 
-try:
-    VoucherForm = util.get_object_from_name(settings.VOUCHER_FORM)
-except:
-    VoucherForm = _VoucherForm
-
+VoucherForm = get_form_class_from_settings('REGISTRASION_VOUCHER_FORM', _VoucherForm)
 
 def staff_products_form_factory(user):
     ''' Creates a StaffProductsForm that restricts the available products to

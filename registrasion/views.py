@@ -438,11 +438,11 @@ def edit_profile(request):
 
 # Define the attendee profile form, or get a default.
 try:
-    ProfileForm = util.get_object_from_name(settings.ATTENDEE_PROFILE_FORM)
+    ProfileForm = util.get_object_from_name(settings.REGISTRASION_ATTENDEE_PROFILE_FORM)
 except:
     class ProfileForm(django_forms.ModelForm):
         class Meta:
-            model = util.get_object_from_name(settings.ATTENDEE_PROFILE_MODEL)
+            model = util.get_object_from_name(settings.REGISTRASION_ATTENDEE_PROFILE_MODEL)
             exclude = ["attendee"]
 
 
