@@ -15,6 +15,14 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import LayoutObject, Layout, Field, Fieldset, Div, HTML, ButtonHolder, Submit, TEMPLATE_PACK
 
 
+def get_form_class_from_settings(config_name, default):
+    import_path = getattr(settings, config_name, "")
+    try:
+        return util.get_object_from_name(import_path)
+    except:
+        return default
+
+
 class ApplyCreditNoteForm(forms.Form):
 
     required_css_class = 'label-required'
@@ -1319,13 +1327,6 @@ class _VoucherForm(forms.Form):
         help_text="If you have a voucher code, enter it here",
         required=False,
     )
-
-def get_form_class_from_settings(config_name, default):
-    import_path = getattr(settings, config_name, "")
-    try:
-        return util.get_object_from_name(import_path)
-    except:
-        return default
 
 VoucherForm = get_form_class_from_settings('VOUCHER_FORM', _VoucherForm)
 
