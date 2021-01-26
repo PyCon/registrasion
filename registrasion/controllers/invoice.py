@@ -475,7 +475,7 @@ class InvoiceController(ForId, object):
     def email_on_invoice_creation(cls, invoice):
         ''' Sends out an e-mail notifying the user that an invoice has been
         created. '''
-        return
+
         cls.email(invoice, "invoice_created")
 
     @classmethod
@@ -499,7 +499,7 @@ class InvoiceController(ForId, object):
         if False and new_status in silent_status:
             pass
 
-        #cls.email(invoice, "invoice_updated")
+        cls.email(invoice, "invoice_updated")
         if new_status == commerce.Invoice.STATUS_PAID:
             donations_to_acknowledge = defaultdict(list)
             for line_item in invoice.lineitem_set.all():
